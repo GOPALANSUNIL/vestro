@@ -235,7 +235,7 @@ h2{font-size:clamp(2.2rem,4.6vw,3.6rem);margin:.9rem 0 1.1rem}
 .filter-row{display:flex;gap:.6rem;flex-wrap:wrap;margin-top:2.4rem;position:relative;z-index:1}
 .filter-row .chip{background:none;cursor:pointer;font-family:var(--body)}
 .filter-row .chip-on{background:var(--maroon);border-color:var(--maroon);color:var(--paper)}
-.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(255px,1fr));gap:1.6rem;margin-top:2.6rem;position:relative;z-index:1}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(255px,290px));gap:1.6rem;margin-top:2.6rem;position:relative;z-index:1;justify-content:center}
 .card{
   --rx:0deg;--ry:0deg;--mx:50%;--my:50%;
   border-radius:var(--radius);position:relative;isolation:isolate;
