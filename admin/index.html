@@ -2,6 +2,16 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8" />
+<!-- Clickjacking guard: hide the page until we're sure it isn't loaded inside someone else's iframe -->
+<style id="anticlickjack">body{display:none !important;}</style>
+<script>
+  if (self === top) {
+    var acj = document.getElementById('anticlickjack');
+    acj.parentNode.removeChild(acj);
+  } else {
+    top.location = self.location;
+  }
+</script>
 <title>Vestro Admin</title>
 <meta name="robots" content="noindex,nofollow" />
 <meta http-equiv="refresh" content="0; url=../admin.html" />
