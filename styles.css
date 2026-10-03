@@ -24,7 +24,7 @@
 }
 *{margin:0;padding:0;box-sizing:border-box}
 [hidden]{display:none!important}
-html{scroll-behavior:smooth;scroll-padding-top:110px}
+html{scroll-behavior:smooth;scroll-padding-top:80px}
 body{
   background:var(--paper);
   color:var(--ink);
@@ -102,20 +102,6 @@ h2{font-size:clamp(2.6rem,5.4vw,4.4rem);margin:1.2rem 0 1.4rem}
 .nav-cta:hover{background:var(--gold-hi);border-color:var(--gold-hi);color:var(--night)}
 .nav.scrolled .nav-cta:hover,.nav.menu-open .nav-cta:hover{background:var(--night);border-color:var(--night);color:var(--paper)}
 .nav-cta::after{display:none}
-
-/* announcement ribbon */
-.announce{
-  background:var(--night);color:var(--gold-hi);text-align:center;
-  font-size:.62rem;letter-spacing:.34em;text-transform:uppercase;font-weight:400;
-  padding:.6rem .8rem;border-bottom:1px solid var(--line-night);
-  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
-}
-.announce-short{display:none}
-@media(max-width:640px){
-  .announce{letter-spacing:.2em}
-  .announce-full{display:none}
-  .announce-short{display:inline}
-}
 
 /* hamburger (phones only) */
 .nav-burger{
