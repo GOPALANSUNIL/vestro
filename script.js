@@ -222,20 +222,20 @@ if('IntersectionObserver' in window){
     const c = document.createElement('canvas'); c.width = c.height = 1024;
     const g = c.getContext('2d');
     const grad = g.createLinearGradient(0,0,1024,880);
-    grad.addColorStop(0.00,'#ecdfc3');
-    grad.addColorStop(0.22,'#f8f2e2');
-    grad.addColorStop(0.48,'#eddcb4');
-    grad.addColorStop(0.74,'#e0c68f');
-    grad.addColorStop(1.00,'#cfae70');
+    /* maroon silk body */
+    grad.addColorStop(0.00,'#7a1828');
+    grad.addColorStop(0.22,'#9a2639');
+    grad.addColorStop(0.48,'#7d1a2b');
+    grad.addColorStop(0.74,'#6a1322');
+    grad.addColorStop(1.00,'#57101c');
     g.fillStyle = grad; g.fillRect(0,0,1024,1024);
-    /* watercolour wash in the logo's colours, dyed into the silk */
-    [[430,250,330,'233,80,143',.62],[760,170,330,'243,154,61',.62],[930,470,340,'38,178,170',.8],
-     [560,600,340,'72,120,235',.82],[250,560,300,'138,79,199',.45],[700,400,240,'233,80,143',.62]
-    ].forEach(([x,y,r,c,a])=>{
-      const w = g.createRadialGradient(x,y,0,x,y,r);
-      w.addColorStop(0,`rgba(${c},${a})`); w.addColorStop(1,`rgba(${c},0)`);
-      g.fillStyle = w; g.fillRect(0,0,1024,1024);
-    });
+    /* small gold butta motifs woven across the body */
+    g.fillStyle = 'rgba(226,194,122,.55)';
+    for(let row=0, y=60; y<840; y+=96, row++){
+      for(let x=(row%2 ? 78 : 30); x<1024; x+=96){
+        g.save(); g.translate(x,y); g.rotate(Math.PI/4); g.fillRect(-3,-3,6,6); g.restore();
+      }
+    }
     /* weave threads */
     for(let x=0;x<1024;x+=6){
       g.fillStyle = 'rgba(140,105,60,'+(x%18===0?0.07:0.035)+')';
@@ -273,8 +273,8 @@ if('IntersectionObserver' in window){
   const mat = new THREE.MeshPhongMaterial({
     map: silkTexture(),
     side: THREE.DoubleSide,
-    shininess: 45,
-    specular: new THREE.Color(0x5a4a30)
+    shininess: 30,
+    specular: new THREE.Color(0x2e1612)
   });
   const cloth = new THREE.Mesh(geo, mat);
 
@@ -284,10 +284,10 @@ if('IntersectionObserver' in window){
   group.position.set(1.4, -0.15, 0);
   scene.add(group);
 
-  /* kept below full brightness so the dyed colours aren't washed out to white */
-  scene.add(new THREE.AmbientLight(0xfff6e6, .56));
-  const key = new THREE.DirectionalLight(0xfff1d6, .5); key.position.set(4,6,6); scene.add(key);
-  const rim = new THREE.PointLight(0xd9b36a, .2, 60); rim.position.set(-7,-2,5); scene.add(rim);
+  /* modest light, so the maroon stays deep instead of bleaching to pink */
+  scene.add(new THREE.AmbientLight(0xfff6e6, .5));
+  const key = new THREE.DirectionalLight(0xfff1d6, .42); key.position.set(4,6,6); scene.add(key);
+  const rim = new THREE.PointLight(0xd9b36a, .12, 60); rim.position.set(-7,-2,5); scene.add(rim);
 
   /* wave animation over original vertex grid */
   const pos = geo.attributes.position;
