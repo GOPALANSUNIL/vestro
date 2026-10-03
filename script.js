@@ -222,20 +222,13 @@ if('IntersectionObserver' in window){
     const c = document.createElement('canvas'); c.width = c.height = 1024;
     const g = c.getContext('2d');
     const grad = g.createLinearGradient(0,0,1024,880);
-    /* maroon silk body */
-    grad.addColorStop(0.00,'#7a1828');
-    grad.addColorStop(0.22,'#9a2639');
-    grad.addColorStop(0.48,'#7d1a2b');
-    grad.addColorStop(0.74,'#6a1322');
-    grad.addColorStop(1.00,'#57101c');
+    /* champagne silk body */
+    grad.addColorStop(0.00,'#e9dab9');
+    grad.addColorStop(0.22,'#f7f0dd');
+    grad.addColorStop(0.48,'#e8d6ac');
+    grad.addColorStop(0.74,'#d9bf86');
+    grad.addColorStop(1.00,'#c6a566');
     g.fillStyle = grad; g.fillRect(0,0,1024,1024);
-    /* small gold butta motifs woven across the body */
-    g.fillStyle = 'rgba(226,194,122,.55)';
-    for(let row=0, y=60; y<840; y+=96, row++){
-      for(let x=(row%2 ? 78 : 30); x<1024; x+=96){
-        g.save(); g.translate(x,y); g.rotate(Math.PI/4); g.fillRect(-3,-3,6,6); g.restore();
-      }
-    }
     /* weave threads */
     for(let x=0;x<1024;x+=6){
       g.fillStyle = 'rgba(140,105,60,'+(x%18===0?0.07:0.035)+')';
@@ -273,8 +266,8 @@ if('IntersectionObserver' in window){
   const mat = new THREE.MeshPhongMaterial({
     map: silkTexture(),
     side: THREE.DoubleSide,
-    shininess: 30,
-    specular: new THREE.Color(0x2e1612)
+    shininess: 40,
+    specular: new THREE.Color(0x3a301e)
   });
   const cloth = new THREE.Mesh(geo, mat);
 
@@ -284,10 +277,10 @@ if('IntersectionObserver' in window){
   group.position.set(1.4, -0.15, 0);
   scene.add(group);
 
-  /* modest light, so the maroon stays deep instead of bleaching to pink */
-  scene.add(new THREE.AmbientLight(0xfff6e6, .5));
-  const key = new THREE.DirectionalLight(0xfff1d6, .42); key.position.set(4,6,6); scene.add(key);
-  const rim = new THREE.PointLight(0xd9b36a, .12, 60); rim.position.set(-7,-2,5); scene.add(rim);
+  /* a little under full brightness, so the folds keep their shading on a pale page */
+  scene.add(new THREE.AmbientLight(0xfff6e6, .52));
+  const key = new THREE.DirectionalLight(0xfff1d6, .36); key.position.set(4,6,6); scene.add(key);
+  const rim = new THREE.PointLight(0xd9b36a, .1, 60); rim.position.set(-7,-2,5); scene.add(rim);
 
   /* wave animation over original vertex grid */
   const pos = geo.attributes.position;
