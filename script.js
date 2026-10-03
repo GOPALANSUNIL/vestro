@@ -212,11 +212,11 @@ document.querySelectorAll('.reveal').forEach(el=>io.observe(el));
     const c = document.createElement('canvas'); c.width = c.height = 1024;
     const g = c.getContext('2d');
     const grad = g.createLinearGradient(0,0,1024,880);
-    grad.addColorStop(0.00,'#d9c49a');
-    grad.addColorStop(0.22,'#f1e6cc');
-    grad.addColorStop(0.48,'#dcc391');
-    grad.addColorStop(0.74,'#c4a368');
-    grad.addColorStop(1.00,'#a8854c');
+    grad.addColorStop(0.00,'#ecdfc3');
+    grad.addColorStop(0.22,'#f8f2e2');
+    grad.addColorStop(0.48,'#eddcb4');
+    grad.addColorStop(0.74,'#e0c68f');
+    grad.addColorStop(1.00,'#cfae70');
     g.fillStyle = grad; g.fillRect(0,0,1024,1024);
     /* weave threads */
     for(let x=0;x<1024;x+=6){
@@ -255,8 +255,8 @@ document.querySelectorAll('.reveal').forEach(el=>io.observe(el));
   const mat = new THREE.MeshPhongMaterial({
     map: silkTexture(),
     side: THREE.DoubleSide,
-    shininess: 38,
-    specular: new THREE.Color(0x3a2f1c)
+    shininess: 45,
+    specular: new THREE.Color(0xf5e3b8)
   });
   const cloth = new THREE.Mesh(geo, mat);
 
@@ -266,10 +266,9 @@ document.querySelectorAll('.reveal').forEach(el=>io.observe(el));
   group.position.set(1.4, -0.15, 0);
   scene.add(group);
 
-  /* low ambient + a raking key light, so the folds read against the dark hero */
-  scene.add(new THREE.AmbientLight(0xfff6e6, .3));
-  const key = new THREE.DirectionalLight(0xfff1d6, .62); key.position.set(7,5,3.5); scene.add(key);
-  const rim = new THREE.PointLight(0xd9b36a, .25, 60); rim.position.set(-7,-2,5); scene.add(rim);
+  scene.add(new THREE.AmbientLight(0xfff6e6, .72));
+  const key = new THREE.DirectionalLight(0xfff1d6, .85); key.position.set(4,6,6); scene.add(key);
+  const rim = new THREE.PointLight(0xd9b36a, .5, 60); rim.position.set(-7,-2,5); scene.add(rim);
 
   /* wave animation over original vertex grid */
   const pos = geo.attributes.position;
