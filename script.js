@@ -32,6 +32,142 @@ const io = new IntersectionObserver((entries)=>{
 },{threshold:.15});
 document.querySelectorAll('.reveal').forEach(el=>io.observe(el));
 
+/* ---------- 3D SILK SASH: twisting ribbon streaming across the band ---------- */
+(function(){
+  if(!window.THREE) return;
+  const wrap = document.getElementById('ribbonWrap');
+  const canvas = document.getElementById('ribbon');
+  if(!wrap || !canvas) return;
+
+  const renderer = new THREE.WebGLRenderer({canvas, antialias:true, alpha:true});
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  const scene = new THREE.Scene();
+  const camera = new THREE.PerspectiveCamera(30, 4, .1, 100);
+  camera.position.set(0, 0, 10);
+
+  /* ribbon texture: ivory silk body with zari borders on both long edges */
+  function sashTexture(){
+    const c = document.createElement('canvas'); c.width = 1024; c.height = 256;
+    const g = c.getContext('2d');
+    const grad = g.createLinearGradient(0,0,1024,0);
+    grad.addColorStop(0,'#f6efdc'); grad.addColorStop(.5,'#f0e4c4'); grad.addColorStop(1,'#f6efdc');
+    g.fillStyle = grad; g.fillRect(0,0,1024,256);
+    /* weave */
+    for(let x=0;x<1024;x+=5){ g.fillStyle='rgba(140,105,60,.04)'; g.fillRect(x,0,1,256); }
+    for(let y=0;y<256;y+=6){ g.fillStyle='rgba(100,70,40,.03)'; g.fillRect(0,y,1024,1); }
+    /* borders along both long edges */
+    function border(y0, flip){
+      const bh = 46;
+      const bg = g.createLinearGradient(0, flip? y0+bh : y0, 0, flip? y0 : y0+bh);
+      bg.addColorStop(0,'#e6c26e'); bg.addColorStop(.55,'#b98a3e'); bg.addColorStop(1,'#8a5f22');
+      g.fillStyle = bg; g.fillRect(0, y0, 1024, bh);
+      g.fillStyle = 'rgba(90,22,32,.5)';
+      for(let x=0;x<1024;x+=40){ g.fillRect(x, y0, 2, bh); }
+      g.fillStyle = '#5a1620';
+      for(let x=20;x<1024;x+=40){
+        g.save(); g.translate(x, y0 + bh*.5); g.rotate(Math.PI/4); g.fillRect(-5,-5,10,10); g.restore();
+      }
+      /* saffron pinstripe on the body side */
+      g.fillStyle = '#c9662c';
+      g.fillRect(0, flip? y0 - 7 : y0 + bh + 3, 1024, 3);
+      /* wine selvedge at the outer hem */
+      g.fillStyle = '#5a1620';
+      g.fillRect(0, flip? y0 + bh - 4 : y0, 1024, 4);
+    }
+    border(4, false);      /* top edge  */
+    border(206, true);     /* bottom edge */
+    const tex = new THREE.CanvasTexture(c);
+    tex.wrapS = THREE.RepeatWrapping;
+    tex.repeat.set(5, 1);
+    tex.anisotropy = 4;
+    return tex;
+  }
+
+  const LEN = 26, HGT = 1.55, SX = 220, SY = 16;
+  const geo = new THREE.PlaneGeometry(LEN, HGT, SX, SY);
+  const mat = new THREE.MeshPhongMaterial({
+    map: sashTexture(),
+    side: THREE.DoubleSide,
+    shininess: 55,
+    specular: new THREE.Color(0xf5e3b8)
+  });
+  const sash = new THREE.Mesh(geo, mat);
+  scene.add(sash);
+
+  scene.add(new THREE.AmbientLight(0xfff4e2, .78));
+  const key = new THREE.DirectionalLight(0xffeecf, .9); key.position.set(2, 4, 6); scene.add(key);
+  const rim = new THREE.PointLight(0xd9b36a, .55, 50); rim.position.set(-8, 2, 4); scene.add(rim);
+
+  const pos = geo.attributes.position;
+  const N = pos.count;
+  const ox = new Float32Array(N), oy = new Float32Array(N);
+  for(let i=0;i<N;i++){ ox[i]=pos.getX(i); oy[i]=pos.getY(i); }
+
+  /* cursor swell */
+  let px = .5, hover = 0, hoverT = 0;
+  wrap.addEventListener('pointermove', e=>{
+    const r = wrap.getBoundingClientRect();
+    px = (e.clientX - r.left)/r.width;
+    hoverT = 1;
+  });
+  ['pointerleave','pointercancel'].forEach(ev=>wrap.addEventListener(ev, ()=>{ hoverT = 0; }));
+
+  function wave(t){
+    const mx = (px - .5) * LEN;
+    for(let i=0;i<N;i++){
+      const x = ox[i], y0 = oy[i];
+      const g = hover * 1.05 * Math.exp(-((x-mx)*(x-mx))/6); /* localized rise near cursor */
+      const th = Math.sin(x*0.42 - t*1.0)*1.15 + g*0.8;       /* traveling twist */
+      const y = y0*Math.cos(th)
+              + Math.sin(x*0.5 + t*0.85)*0.42
+              + Math.sin(x*0.18 - t*0.5)*0.22
+              + g*0.55;
+      const z = y0*Math.sin(th)
+              + Math.cos(x*0.33 - t*0.7)*0.35;
+      pos.setY(i, y); pos.setZ(i, z);
+    }
+    pos.needsUpdate = true;
+    geo.computeVertexNormals();
+  }
+
+  function resize(){
+    const w = wrap.clientWidth, h = wrap.clientHeight;
+    renderer.setSize(w, h, false);
+    camera.aspect = w/h;
+    camera.updateProjectionMatrix();
+    /* stretch the sash so it always runs past both screen edges */
+    const visW = 2 * camera.position.z * Math.tan(camera.fov * Math.PI/360) * camera.aspect;
+    sash.scale.x = (visW * 1.15) / LEN;
+    renderer.render(scene, camera);
+  }
+  window.addEventListener('resize', resize, {passive:true}); resize();
+
+  if(reduced){
+    wave(2.1);
+    renderer.render(scene, camera);
+    return;
+  }
+
+  /* animate only while the band is on screen */
+  let visible = false, raf = null;
+  function loop(ms){
+    const t = ms*0.001;
+    hover += (hoverT - hover)*0.06;
+    wave(t);
+    renderer.render(scene, camera);
+    raf = requestAnimationFrame(loop);
+  }
+  function start(){ if(raf===null){ raf = requestAnimationFrame(loop); } }
+  function stop(){ if(raf!==null){ cancelAnimationFrame(raf); raf = null; } }
+  const rio = new IntersectionObserver(es=>{
+    es.forEach(en=>{ visible = en.isIntersecting; visible ? start() : stop(); });
+  },{threshold:0});
+  rio.observe(wrap);
+  document.addEventListener('visibilitychange', ()=>{
+    if(document.hidden){ stop(); } else if(visible){ start(); }
+  });
+})();
+
 /* ---------- DOHA → KERALA PARCEL ---------- */
 (function(){
   const path = document.getElementById('flight');

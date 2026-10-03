@@ -1,13 +1,13 @@
 
-/* ============ TOKENS — maison: warm ivory, night espresso, champagne gold ============ */
+/* ============ TOKENS — maison: warm ivory, deep wine, champagne gold ============ */
 :root{
   --paper:#f6f1e8;            /* ivory page                */
   --paper-2:#ece4d5;          /* deeper linen tint         */
   --card:#fbf8f2;             /* raised surface            */
   --ink:#1f1714;              /* espresso text             */
   --taupe:#7a6d63;            /* muted secondary text      */
-  --night:#17100f;            /* dark sections             */
-  --night-2:#231816;
+  --night:#24090e;            /* dark sections — deep wine */
+  --night-2:#3a0f18;
   --maroon:#5a1a24;           /* deep wine — accent        */
   --maroon-deep:#3f1018;
   --gold:#b08d57;             /* champagne gold, decor     */
@@ -133,7 +133,7 @@ h2{font-size:clamp(2.6rem,5.4vw,4.4rem);margin:1.2rem 0 1.4rem}
     position:absolute;left:0;right:0;top:100%;
     display:none;flex-direction:column;align-items:stretch;gap:0;
     background:rgba(246,241,232,.98);backdrop-filter:blur(16px);
-    border-bottom:1px solid var(--line);box-shadow:0 30px 50px -30px rgba(23,16,15,.45);
+    border-bottom:1px solid var(--line);box-shadow:0 30px 50px -30px rgba(36,9,14,.45);
     padding:.4rem 5vw 1.4rem;text-align:left;
   }
   .nav.menu-open{background:rgba(246,241,232,.98)}
@@ -146,19 +146,19 @@ h2{font-size:clamp(2.6rem,5.4vw,4.4rem);margin:1.2rem 0 1.4rem}
 /* ============ HERO ============ */
 .hero{min-height:100svh;display:flex;align-items:center;position:relative;overflow:hidden;
   color:var(--paper);
-  background:radial-gradient(110% 90% at 78% 30%,#3a2520 0%,var(--night-2) 45%,var(--night) 78%);
+  background:radial-gradient(110% 90% at 78% 30%,#5c1c28 0%,var(--night-2) 45%,var(--night) 78%);
 }
 #silk{position:absolute;inset:0;width:100%;height:100%;z-index:0}
 .hero-scrim{position:absolute;inset:0;z-index:1;pointer-events:none;
   background:
-    linear-gradient(90deg,rgba(23,16,15,.97) 0%,rgba(23,16,15,.86) 34%,rgba(23,16,15,.2) 66%,rgba(23,16,15,0) 100%),
+    linear-gradient(90deg,rgba(36,9,14,.97) 0%,rgba(36,9,14,.86) 34%,rgba(36,9,14,.2) 66%,rgba(36,9,14,0) 100%),
     linear-gradient(0deg,var(--night) 0%,transparent 26%),
-    linear-gradient(180deg,rgba(23,16,15,.7) 0%,transparent 24%);
+    linear-gradient(180deg,rgba(36,9,14,.7) 0%,transparent 24%);
 }
 @media(max-width:860px){
   /* on narrow screens the silk sits behind the words — keep it a whisper */
   .hero-scrim{background:
-    linear-gradient(0deg,var(--night) 0%,rgba(23,16,15,.78) 30%,rgba(23,16,15,.72) 70%,rgba(23,16,15,.9) 100%)}
+    linear-gradient(0deg,var(--night) 0%,rgba(36,9,14,.78) 30%,rgba(36,9,14,.72) 70%,rgba(36,9,14,.9) 100%)}
 }
 .hero-content{position:relative;z-index:2;padding:9.5rem 0 6.5rem}
 .hero .eyebrow{color:var(--gold-hi)}
@@ -193,6 +193,16 @@ h2{font-size:clamp(2.6rem,5.4vw,4.4rem);margin:1.2rem 0 1.4rem}
   animation:drift 2.8s var(--ease) infinite;transform-origin:top;
 }
 @keyframes drift{0%{transform:scaleY(0)}55%{transform:scaleY(1)}100%{transform:scaleY(1);opacity:0}}
+
+/* ============ SILK SASH — a 3D ribbon of silk streaming across the page ============ */
+.ribbon-wrap{position:relative;z-index:2;height:clamp(175px,26vw,245px);touch-action:pan-y;background:var(--night)}
+.ribbon-wrap canvas{position:absolute;inset:0;width:100%;height:100%;z-index:1}
+.ribbon-wrap::after{ /* soft ground shadow so the sash floats */
+  content:"";position:absolute;left:50%;bottom:12%;z-index:0;
+  width:min(72%,920px);height:26px;transform:translateX(-50%);
+  background:radial-gradient(50% 50% at 50% 50%,rgba(0,0,0,.45),transparent 70%);
+  filter:blur(7px);
+}
 
 /* ============ PROMISE STRIP ============ */
 .promise{background:var(--night);color:var(--paper);border-top:1px solid var(--line-night)}
@@ -261,7 +271,7 @@ h2{font-size:clamp(2.6rem,5.4vw,4.4rem);margin:1.2rem 0 1.4rem}
 .drape-photo::after{ /* hover veil */
   content:"View";position:absolute;inset:auto 0 0 0;z-index:1;padding:2.4rem 0 1.1rem;text-align:center;
   font-size:.62rem;letter-spacing:.4em;text-transform:uppercase;color:var(--paper);
-  background:linear-gradient(0deg,rgba(23,16,15,.6),transparent);
+  background:linear-gradient(0deg,rgba(36,9,14,.6),transparent);
   opacity:0;transition:opacity .45s;
 }
 .card:hover .drape-photo::after{opacity:1}
@@ -324,7 +334,7 @@ h2{font-size:clamp(2.6rem,5.4vw,4.4rem);margin:1.2rem 0 1.4rem}
   font-size:.56rem;letter-spacing:.3em;text-transform:uppercase;font-weight:400;
   border-radius:var(--radius);padding:.42rem .75rem .4rem;line-height:1.3;
 }
-.sold-badge{left:14px;background:rgba(23,16,15,.86);color:var(--paper)}
+.sold-badge{left:14px;background:rgba(36,9,14,.86);color:var(--paper)}
 .new-badge{left:14px;background:var(--paper);color:var(--ink)}
 .off-badge{right:14px;background:var(--maroon);color:var(--paper)}
 .card:has(.sold-badge) .drape{filter:saturate(.5) brightness(.94)}
@@ -356,7 +366,7 @@ h2{font-size:clamp(2.6rem,5.4vw,4.4rem);margin:1.2rem 0 1.4rem}
   background:var(--night);color:var(--paper);
   border:1px solid var(--line-night);border-radius:var(--radius);
   padding:.45rem .45rem .45rem 1.4rem;
-  box-shadow:0 24px 50px -18px rgba(23,16,15,.7);
+  box-shadow:0 24px 50px -18px rgba(36,9,14,.7);
   animation:cart-in .45s var(--ease);
 }
 @keyframes cart-in{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:none}}
@@ -383,7 +393,7 @@ h2{font-size:clamp(2.6rem,5.4vw,4.4rem);margin:1.2rem 0 1.4rem}
 .cart-panel{
   width:min(380px,92vw);max-height:44svh;overflow-y:auto;
   background:var(--card);border:1px solid var(--line-gold);border-radius:var(--radius);
-  box-shadow:0 30px 60px -24px rgba(23,16,15,.5);
+  box-shadow:0 30px 60px -24px rgba(36,9,14,.5);
   padding:.5rem 1rem;animation:cart-in .3s var(--ease);
 }
 .cart-item{display:flex;align-items:center;gap:.9rem;padding:.7rem 0;border-bottom:1px solid var(--line)}
@@ -411,7 +421,7 @@ h2{font-size:clamp(2.6rem,5.4vw,4.4rem);margin:1.2rem 0 1.4rem}
 /* ============ PRODUCT VIEWER (click a piece to open) ============ */
 .pm-backdrop{
   position:fixed;inset:0;z-index:80;
-  background:rgba(23,16,15,.72);backdrop-filter:blur(6px);
+  background:rgba(36,9,14,.72);backdrop-filter:blur(6px);
   display:flex;align-items:center;justify-content:center;padding:1rem;
 }
 .pm{
@@ -511,7 +521,7 @@ h2{font-size:clamp(2.6rem,5.4vw,4.4rem);margin:1.2rem 0 1.4rem}
 
 /* ============ STORY — night ============ */
 .story{
-  background:radial-gradient(90% 120% at 50% 0%,#2e1f1b 0%,var(--night) 70%);
+  background:radial-gradient(90% 120% at 50% 0%,#4a1520 0%,var(--night) 70%);
   color:var(--paper);text-align:center;
 }
 .story-inner{max-width:820px}
@@ -560,7 +570,7 @@ footer{background:var(--night);padding:5rem 0 2.2rem;font-size:.88rem;color:rgba
 .wa-float{
   position:fixed;right:1.4rem;bottom:1.4rem;z-index:70;width:52px;height:52px;border-radius:50%;
   display:flex;align-items:center;justify-content:center;background:var(--wa);
-  box-shadow:0 14px 30px -12px rgba(23,16,15,.55);
+  box-shadow:0 14px 30px -12px rgba(36,9,14,.55);
   transition:transform .35s var(--ease);
 }
 .wa-float:hover{transform:translateY(-3px)}
