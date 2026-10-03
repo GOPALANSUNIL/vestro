@@ -65,7 +65,11 @@ const CART_KEY = 'vestro-order';
 function readCart(){
   try{ return JSON.parse(localStorage.getItem(CART_KEY)) || []; }catch(e){ return []; }
 }
-function writeCart(items){ localStorage.setItem(CART_KEY, JSON.stringify(items)); }
+/* storage can be blocked (private browsing on some phones) — the basket then
+   simply lasts until the page is closed */
+function writeCart(items){
+  try{ localStorage.setItem(CART_KEY, JSON.stringify(items)); }catch(e){}
+}
 
 /* ---------- WhatsApp message builders ---------- */
 function singleOrderLink(p){
@@ -236,6 +240,7 @@ function cardFor(p, i){
   const inner = el('div','card-inner');
   const drape = drapeFor(p);
   if(p.status === 'soldout'){
+    card.classList.add('is-sold');
     drape.appendChild(el('span','sold-badge','Sold out'));
   }else{
     const pct = percentOff(p);

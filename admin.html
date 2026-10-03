@@ -29,7 +29,7 @@
   --ease:cubic-bezier(.22,.75,.25,1);--radius:6px;--wa:#25d366;--ok:#1d7a4c;--warn:#b3541e;
 }
 *{margin:0;padding:0;box-sizing:border-box}
-body{background:var(--paper);color:var(--ink);font-family:var(--body);font-weight:300;line-height:1.6;min-height:100svh}
+body{background:var(--paper);color:var(--ink);font-family:var(--body);font-weight:300;line-height:1.6;min-height:100vh;min-height:100svh;-webkit-text-size-adjust:100%}
 a{color:inherit;text-decoration:none}
 img{display:block;max-width:100%}
 :focus-visible{outline:2px solid var(--maroon);outline-offset:2px;border-radius:4px}
@@ -101,6 +101,8 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--gold)}
 .row-info .p-price{color:var(--gold-text);font-weight:400}
 .row-actions{display:flex;gap:.55rem;align-items:center;flex-wrap:wrap}
 .status-sel{width:auto;font-size:.8rem;padding:.5rem .7rem;border-radius:999px}
+/* iPhones zoom the page when a field's text is under 16px */
+@media(max-width:640px){.status-sel{font-size:16px}}
 .status-sel.s-available{border-color:rgba(29,122,76,.55);color:var(--ok)}
 .status-sel.s-soldout{border-color:rgba(179,84,30,.55);color:var(--warn)}
 .status-sel.s-hidden{border-color:var(--line);color:var(--taupe)}

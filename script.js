@@ -27,10 +27,15 @@ if(burger && navLinks){
 document.getElementById('yr').textContent = new Date().getFullYear();
 
 /* ---------- SCROLL REVEALS ---------- */
-const io = new IntersectionObserver((entries)=>{
-  entries.forEach(e=>{ if(e.isIntersecting){ e.target.classList.add('in'); io.unobserve(e.target); } });
-},{threshold:.15});
-document.querySelectorAll('.reveal').forEach(el=>io.observe(el));
+if('IntersectionObserver' in window){
+  const io = new IntersectionObserver((entries)=>{
+    entries.forEach(e=>{ if(e.isIntersecting){ e.target.classList.add('in'); io.unobserve(e.target); } });
+  },{threshold:.12});
+  document.querySelectorAll('.reveal').forEach(el=>io.observe(el));
+}else{
+  /* very old browsers: just show everything */
+  document.querySelectorAll('.reveal').forEach(el=>el.classList.add('in'));
+}
 
 /* ---------- 3D SILK SASH: twisting ribbon streaming across the band ---------- */
 (function(){
@@ -39,7 +44,10 @@ document.querySelectorAll('.reveal').forEach(el=>io.observe(el));
   const canvas = document.getElementById('ribbon');
   if(!wrap || !canvas) return;
 
-  const renderer = new THREE.WebGLRenderer({canvas, antialias:true, alpha:true});
+  /* phones without WebGL (or with it switched off): drop the band, keep the page working */
+  let renderer;
+  try{ renderer = new THREE.WebGLRenderer({canvas, antialias:true, alpha:true}); }
+  catch(err){ wrap.hidden = true; return; }
   renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
   const scene = new THREE.Scene();
   const camera = new THREE.PerspectiveCamera(30, 4, .1, 100);
@@ -200,7 +208,9 @@ document.querySelectorAll('.reveal').forEach(el=>io.observe(el));
   const hero = document.querySelector('.hero');
   if(!canvas || !hero) return;
 
-  const renderer = new THREE.WebGLRenderer({canvas, antialias:true, alpha:true});
+  let renderer;
+  try{ renderer = new THREE.WebGLRenderer({canvas, antialias:true, alpha:true}); }
+  catch(err){ return; }
   renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 
   const scene = new THREE.Scene();
@@ -325,7 +335,8 @@ document.querySelectorAll('.reveal').forEach(el=>io.observe(el));
   }
 
   const baseRX = group.rotation.x, baseRY = group.rotation.y;
-  let raf;
+  /* animate only while the hero is on screen — saves phone battery further down the page */
+  let visible = true, raf = null;
   function loop(ms){
     const t = ms*0.001;
     wave(t);
@@ -334,11 +345,16 @@ document.querySelectorAll('.reveal').forEach(el=>io.observe(el));
     renderer.render(scene, camera);
     raf = requestAnimationFrame(loop);
   }
-  raf = requestAnimationFrame(loop);
-
+  function start(){ if(raf===null){ raf = requestAnimationFrame(loop); } }
+  function stop(){ if(raf!==null){ cancelAnimationFrame(raf); raf = null; } }
+  start();
+  if('IntersectionObserver' in window){
+    new IntersectionObserver(es=>{
+      es.forEach(en=>{ visible = en.isIntersecting; visible ? start() : stop(); });
+    },{threshold:0}).observe(hero);
+  }
   document.addEventListener('visibilitychange', ()=>{
-    if(document.hidden){ cancelAnimationFrame(raf); }
-    else { raf = requestAnimationFrame(loop); }
+    if(document.hidden){ stop(); } else if(visible){ start(); }
   });
 })();
 })();
