@@ -615,13 +615,70 @@ footer::before{content:"";position:absolute;top:0;left:0;right:0;height:3px;back
 }
 
 /* ============ REVEAL ============ */
-.reveal{opacity:0;transform:translateY(20px);transition:opacity 1s var(--ease),transform 1s var(--ease)}
+/* Slow and soft on purpose. script.js adds .in while an element is on screen and
+   .from-top when it last left through the top, so it re-enters from that side. */
+:root{--glide:cubic-bezier(.16,1,.3,1)}
+.reveal{opacity:0;transform:translateY(38px);transition:opacity 1.2s var(--glide),transform 1.2s var(--glide)}
+.reveal.from-top{transform:translateY(-38px)}
 .reveal.in{opacity:1;transform:none}
+
+/* headings rise out from behind an edge */
+/* (script.js wraps the heading's text in .rise; the heading itself must stay
+   unclipped, or the browser never reports it as on screen) */
+h1.reveal,h2.reveal{opacity:1;transform:none}
+.reveal .rise{
+  display:block;clip-path:inset(0 0 100% 0);transform:translateY(.5em);
+  transition:clip-path 1.3s var(--glide),transform 1.3s var(--glide);transition-delay:inherit;
+}
+.reveal.from-top .rise{clip-path:inset(100% 0 0 0);transform:translateY(-.5em)}
+.reveal.in .rise{clip-path:inset(-.2em -.2em -.35em -.2em);transform:none}
+
+/* the gold lines beside small labels draw themselves */
+.eyebrow.reveal::before,.eyebrow.reveal::after{transform:scaleX(0);transition:transform 1.3s .25s var(--glide)}
+.eyebrow.reveal::before{transform-origin:left}
+.eyebrow.reveal::after{transform-origin:right}
+.eyebrow.reveal.in::before,.eyebrow.reveal.in::after{transform:scaleX(1)}
+
+/* product photos unveil from the bottom while settling in size */
+.card.reveal .drape{clip-path:inset(100% 0 0 0);transition:clip-path 1.3s var(--glide),filter .4s}
+.card.reveal.from-top .drape{clip-path:inset(0 0 100% 0)}
+.card.reveal.in .drape{clip-path:inset(0)}
+.card.reveal .drape-img{transform:scale(1.14)}
+.card.reveal.in .drape-img{transform:scale(1)}
+.card.reveal.in:hover .drape-img{transform:scale(1.04)}
+
+/* boxes ease up to full size */
+.route-box.reveal,.empty.reveal{transform:translateY(38px) scale(.95)}
+.route-box.reveal.from-top,.empty.reveal.from-top{transform:translateY(-38px) scale(.95)}
+.route-box.reveal.in,.empty.reveal.in{transform:none}
+
+/* Instagram tiles arrive one after another */
+.ig-feed.reveal{opacity:1;transform:none}
+.ig-feed.reveal .ig-grid a{opacity:0;transform:translateY(30px) scale(.96);transition:opacity 1s var(--glide),transform 1s var(--glide)}
+.ig-feed.reveal.from-top .ig-grid a{transform:translateY(-30px) scale(.96)}
+.ig-feed.reveal .ig-grid a:nth-child(3n+2){transition-delay:.12s}
+.ig-feed.reveal .ig-grid a:nth-child(3n){transition-delay:.24s}
+.ig-feed.reveal.in .ig-grid a{opacity:1;transform:none}
+
+/* the logo: one small, soft pop */
+.order-logo.reveal{transform:scale(.72);transition:opacity .9s var(--glide),transform 1.1s cubic-bezier(.34,1.4,.64,1)}
+.order-logo.reveal.in{transform:none}
+
+/* how far down the page you are */
+.scroll-progress{
+  position:fixed;top:0;left:0;right:0;height:2px;z-index:75;pointer-events:none;
+  background:linear-gradient(90deg,var(--gold),var(--gold-hi));
+  transform:scaleX(0);transform-origin:left;
+}
 
 /* ============ REDUCED MOTION ============ */
 @media(prefers-reduced-motion:reduce){
   html{scroll-behavior:auto}
   .scroll-hint{animation:none}
-  .reveal{opacity:1;transform:none;transition:none}
+  .reveal,.reveal .rise,.route-box.reveal,.empty.reveal,.order-logo.reveal,
+  .card.reveal .drape,.card.reveal .drape-img,.ig-feed.reveal .ig-grid a{
+    opacity:1;transform:none;clip-path:none;transition:none;
+  }
+  .eyebrow.reveal::before,.eyebrow.reveal::after{transform:none;transition:none}
   .drape-img{transition:none}
 }

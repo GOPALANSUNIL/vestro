@@ -323,7 +323,7 @@ function renderCats(){
 }
 
 function bindFx(scope){
-  scope.querySelectorAll('.reveal').forEach(n=> io.observe(n));
+  scope.querySelectorAll('.reveal').forEach(reveal);
 }
 
 /* shown while the collection has no pieces */
@@ -487,10 +487,8 @@ if(barClear) barClear.addEventListener('click', ()=>{
 });
 updateBar();
 
-/* ---------- reveal helper ---------- */
-const io = new IntersectionObserver((entries)=>{
-  entries.forEach(e=>{ if(e.isIntersecting){ e.target.classList.add('in'); io.unobserve(e.target); } });
-},{threshold:.15});
+/* ---------- reveal helper (the scroll animation lives in script.js) ---------- */
+const reveal = window.VESTRO_REVEAL || (n => n.classList.add('in'));
 
 /* ---------- first paint ---------- */
 renderCats();

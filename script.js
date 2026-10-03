@@ -27,15 +27,60 @@ if(burger && navLinks){
 document.getElementById('yr').textContent = new Date().getFullYear();
 
 /* ---------- SCROLL REVEALS ---------- */
+/* Elements animate in every time they come back into view. When one leaves, it
+   remembers which side it left from, so it re-enters from that side — rising
+   when you scroll down, descending when you scroll up. */
 if('IntersectionObserver' in window){
   const io = new IntersectionObserver((entries)=>{
-    entries.forEach(e=>{ if(e.isIntersecting){ e.target.classList.add('in'); io.unobserve(e.target); } });
-  },{threshold:.12});
-  document.querySelectorAll('.reveal').forEach(el=>io.observe(el));
+    entries.forEach(e=>{
+      const el = e.target;
+      if(e.isIntersecting){
+        /* 12% visible, or a good slice of a very tall block */
+        if(e.intersectionRatio >= .12 || e.intersectionRect.height > 160) el.classList.add('in');
+      }else{
+        el.classList.remove('in');
+        el.classList.toggle('from-top', e.boundingClientRect.top < 0);
+      }
+    });
+  },{threshold:[0,.12,.3]});
+  /* catalog.js uses this for the product cards it adds later */
+  window.VESTRO_REVEAL = el => io.observe(el);
 }else{
   /* very old browsers: just show everything */
-  document.querySelectorAll('.reveal').forEach(el=>el.classList.add('in'));
+  window.VESTRO_REVEAL = el => el.classList.add('in');
 }
+/* headings: wrap the text so it can rise out from behind an edge (see styles.css) */
+document.querySelectorAll('h1.reveal, h2.reveal').forEach(h=>{
+  const rise = document.createElement('span');
+  rise.className = 'rise';
+  while(h.firstChild) rise.appendChild(h.firstChild);
+  h.appendChild(rise);
+});
+document.querySelectorAll('.reveal').forEach(window.VESTRO_REVEAL);
+
+/* ---------- SCROLL PROGRESS LINE + HERO DRIFT ---------- */
+(function(){
+  const bar = document.getElementById('scrollProgress');
+  const heroEl = document.querySelector('.hero');
+  const heroContent = document.querySelector('.hero-content');
+  let ticking = false;
+  function update(){
+    ticking = false;
+    const y = window.scrollY;
+    const max = document.documentElement.scrollHeight - window.innerHeight;
+    if(bar) bar.style.transform = 'scaleX(' + (max > 0 ? Math.min(1, y/max) : 0) + ')';
+    /* the first screen's words drift down and fade as it scrolls away */
+    if(!reduced && heroEl && heroContent){
+      const h = heroEl.offsetHeight;
+      if(y < h){
+        heroContent.style.transform = 'translate3d(0,' + (y*0.2).toFixed(1) + 'px,0)';
+        heroContent.style.opacity = Math.max(0, 1 - y/(h*0.75)).toFixed(3);
+      }
+    }
+  }
+  window.addEventListener('scroll', ()=>{ if(!ticking){ ticking = true; requestAnimationFrame(update); } }, {passive:true});
+  update();
+})();
 
 /* ---------- 3D SILK SASH: twisting ribbon streaming across the band ---------- */
 (function(){
