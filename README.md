@@ -14,11 +14,18 @@ Handpicked kasavu & festive saree boutique. Doha, Qatar · free delivery · cash
 - No server to maintain: hosted free on GitHub Pages, products stored in
   Firebase (project `vestro-e5637`, free tier).
 
+## Fresh start (3 Oct 2026)
+
+The shop was relaunched with an empty collection. Products added before
+`VESTRO_FRESH_START` (in `firebase-config.js`) are archived: customers never see
+them, and the admin portal lists them under **Archived**, where each can be
+brought back or deleted. Set the value to `0` to show everything again.
+
 ## Files
 
 | File | Purpose |
 |---|---|
-| `index.html` / `styles.css` / `script.js` | The shop — layout, design, 3D silk animations |
+| `index.html` / `styles.css` / `script.js` | The shop — layout, design, 3D silk hero |
 | `catalog.js` | Loads products from Firebase + the WhatsApp order basket |
 | `admin.html` (+ `admin/`) | Admin portal, reachable at `/admin` |
 | `firebase-config.js` | Firebase keys + WhatsApp numbers |

@@ -15,18 +15,18 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Vestro Admin — Manage Products</title>
 <meta name="robots" content="noindex,nofollow" />
-<meta name="theme-color" content="#4a1119" />
+<meta name="theme-color" content="#17100f" />
 <link rel="icon" type="image/png" href="logo-mark.png" />
 <link rel="apple-touch-icon" href="logo-mark.png" />
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-<link href="https://fonts.googleapis.com/css2?family=Gloock&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet" />
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet" />
 <style>
 :root{
-  --paper:#f7f1e5;--paper-2:#efe6d3;--card:#fcf8ef;--ink:#33241f;--taupe:#77685c;
-  --maroon:#6b1f2a;--maroon-deep:#4a1119;--gold:#b98a3e;--gold-hi:#d9b36a;--gold-text:#8f6a2e;
-  --line:rgba(51,36,31,.16);--display:'Gloock',Georgia,serif;--body:'Jost',system-ui,sans-serif;
-  --ease:cubic-bezier(.22,.75,.25,1);--radius:16px;--wa:#25d366;--ok:#1d7a4c;--warn:#b3541e;
+  --paper:#f6f1e8;--paper-2:#ece4d5;--card:#fbf8f2;--ink:#1f1714;--taupe:#7a6d63;
+  --maroon:#5a1a24;--maroon-deep:#17100f;--gold:#b08d57;--gold-hi:#d8bd8a;--gold-text:#876a3a;
+  --line:rgba(31,23,20,.14);--display:'Cormorant Garamond',Georgia,serif;--body:'Jost',system-ui,sans-serif;
+  --ease:cubic-bezier(.22,.75,.25,1);--radius:6px;--wa:#25d366;--ok:#1d7a4c;--warn:#b3541e;
 }
 *{margin:0;padding:0;box-sizing:border-box}
 body{background:var(--paper);color:var(--ink);font-family:var(--body);font-weight:300;line-height:1.6;min-height:100svh}
@@ -107,6 +107,11 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--gold)}
 .mini{font-size:.68rem;letter-spacing:.12em;text-transform:uppercase;border-radius:999px;padding:.5rem .95rem;cursor:pointer;font-family:var(--body)}
 #emptyState{text-align:center;padding:3rem 1rem;color:var(--taupe)}
 #emptyState .btn{margin-top:1.2rem}
+#archView{margin-top:2.6rem;border-top:1px solid var(--line);padding-top:1.4rem}
+#archView summary{cursor:pointer;font-size:.74rem;letter-spacing:.16em;text-transform:uppercase;color:var(--taupe)}
+#archView .hint{margin:.8rem 0 1.1rem}
+#archList{display:grid;gap:.9rem}
+#archList .thumb{filter:saturate(.6)}
 
 /* add / edit product page */
 .back-link{
@@ -182,7 +187,7 @@ footer{padding:1.6rem 0;text-align:center;font-size:.72rem;letter-spacing:.16em;
         <li>Reload this page — the login box will appear.</li>
       </ol>
     </div>
-    <p class="sub">Until then, your live site keeps showing the 4 starter sarees, so nothing is broken.</p>
+    <p class="sub">Until then, your live site shows a “collection on its way” note, so nothing is broken.</p>
   </section>
 
   <!-- ===== LOGIN ===== -->
@@ -212,9 +217,14 @@ footer{padding:1.6rem 0;text-align:center;font-size:.72rem;letter-spacing:.16em;
     </div>
     <div id="list"></div>
     <div id="emptyState" class="hiddenview">
-      <p>No products yet.</p>
-      <button class="btn btn-ghost" id="seedBtn">Load the 4 starter sarees</button>
+      <p>Your new collection is empty — the shop shows a “collection on its way” note until you add the first piece.</p>
+      <button class="btn btn-primary" id="addFirstBtn">+ Add your first piece</button>
     </div>
+    <details id="archView" class="hiddenview">
+      <summary id="archCount"></summary>
+      <p class="hint">These were in the shop before the fresh start. Customers can't see them. “Bring back” returns a piece to the shop; “Delete” removes it for good.</p>
+      <div id="archList"></div>
+    </details>
   </section>
 
   <!-- ===== ADD / EDIT PAGE ===== -->
@@ -353,10 +363,18 @@ async function init(){
   const STATUS_LABEL = { available:'Available', soldout:'Sold out', hidden:'Hidden' };
   let products = [];
 
+  /* pieces added before the fresh start (see firebase-config.js) are kept
+     out of the shop and listed separately under "Archived" */
+  const FRESH_START = window.VESTRO_FRESH_START || 0;
+  let archived = [];
+
   async function refresh(){
     const snap = await getDocs(query(col, orderBy('createdAt','desc')));
-    products = [];
-    snap.forEach(d => products.push({ id:d.id, ...d.data() }));
+    products = []; archived = [];
+    snap.forEach(d =>{
+      const p = { id:d.id, ...d.data() };
+      ((p.createdAt || 0) >= FRESH_START ? products : archived).push(p);
+    });
     renderList();
   }
 
@@ -368,7 +386,16 @@ async function init(){
     $('countPill').textContent = products.length
       ? `${products.length} product${products.length>1?'s':''} · ${visible} visible on the site`
       : '';
-    products.forEach(p=>{
+    products.forEach(p => list.appendChild(rowFor(p, false)));
+
+    const arch = $('archList');
+    arch.textContent = '';
+    show($('archView'), archived.length > 0);
+    $('archCount').textContent = `Archived — ${archived.length} earlier piece${archived.length>1?'s':''}`;
+    archived.forEach(p => arch.appendChild(rowFor(p, true)));
+  }
+
+  function rowFor(p, isArchived){
       const row = document.createElement('div'); row.className = 'row';
 
       const cover = (p.images && p.images[0]) || p.image || '';
@@ -402,17 +429,29 @@ async function init(){
         sel.className = 'status-sel s-' + p.status; sel.disabled = false;
         renderList();
       });
-      actions.appendChild(sel);
-
       const edit = document.createElement('button');
-      edit.className = 'btn btn-ghost mini'; edit.textContent = 'Edit';
-      edit.addEventListener('click', ()=> openForm(p));
+      edit.className = 'btn btn-ghost mini';
+      if(isArchived){
+        /* a fresh createdAt puts it back in the shop, as the newest piece */
+        edit.textContent = 'Bring back';
+        edit.addEventListener('click', async ()=>{
+          edit.disabled = true;
+          await updateDoc(doc(db,'products',p.id), { createdAt: Date.now() });
+          refresh();
+        });
+      }else{
+        actions.appendChild(sel);
+        edit.textContent = 'Edit';
+        edit.addEventListener('click', ()=> openForm(p));
+      }
       actions.appendChild(edit);
 
       const del = document.createElement('button');
       del.className = 'btn btn-danger mini'; del.textContent = 'Delete';
       del.addEventListener('click', async ()=>{
-        if(!confirm(`Delete "${p.name}" forever? (Tip: choose "Hidden" instead if it may come back.)`)) return;
+        if(!confirm(isArchived
+          ? `Delete "${p.name}" forever? Its photos cannot be recovered.`
+          : `Delete "${p.name}" forever? (Tip: choose "Hidden" instead if it may come back.)`)) return;
         del.disabled = true;
         await deleteDoc(doc(db,'products',p.id));
         refresh();
@@ -420,26 +459,8 @@ async function init(){
       actions.appendChild(del);
 
       row.appendChild(actions);
-      list.appendChild(row);
-    });
+      return row;
   }
-
-  /* ---------- seed starter products ---------- */
-  $('seedBtn').addEventListener('click', async ()=>{
-    $('seedBtn').disabled = true;
-    const seed = [
-      { name:'Antique Gold Tissue',     weave:'Featherlight tissue · full zari body', style:'goldtissue' },
-      { name:'Kasavu · Saffron Border', weave:'Classic cream · saffron zari edge',    style:'saffron' },
-      { name:'Ivory Temple Zari',       weave:'Soft ivory · fine gold thread lines',  style:'temple' },
-      { name:'Marigold Festive',        weave:'Warm ochre · occasion wear',           style:'marigold' }
-    ];
-    let t = Date.now();
-    for(const s of seed){
-      await addDoc(col, { ...s, price:'', image:'', status:'available', createdAt: t-- });
-    }
-    $('seedBtn').disabled = false;
-    refresh();
-  });
 
   /* ---------- add / edit page ---------- */
   const MAX_PHOTOS = 4;
@@ -527,6 +548,7 @@ async function init(){
   }
 
   $('addBtn').addEventListener('click', ()=> openForm(null));
+  $('addFirstBtn').addEventListener('click', ()=> openForm(null));
   $('backBtn').addEventListener('click', closeForm);
   $('cancelBtn').addEventListener('click', closeForm);
   $('pCat').addEventListener('change', toggleNewCat);

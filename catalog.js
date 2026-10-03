@@ -1,22 +1,15 @@
 /* ==========================================================================
    VESTRO — LIVE CATALOG + WHATSAPP ORDER BASKET
    Loads products from Firebase Firestore (managed via admin.html).
-   Falls back to the built-in starter sarees if Firebase isn't set up yet.
+   Shows a "collection arriving" note until the first piece is added.
    ========================================================================== */
 (async function(){
 "use strict";
 
 const WA = window.VESTRO_WHATSAPP || "97466194953";
-const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-const finePointer = window.matchMedia('(pointer: fine)').matches;
+/* pieces added before this moment are archived (see firebase-config.js) */
+const FRESH_START = window.VESTRO_FRESH_START || 0;
 
-/* ---------- starter products (used until Firebase is configured) ---------- */
-const DEFAULTS = [
-  { id:'d1', name:'Antique Gold Tissue',     weave:'Featherlight tissue · full zari body',  price:'', style:'goldtissue', status:'available' },
-  { id:'d2', name:'Kasavu · Saffron Border', weave:'Classic cream · saffron zari edge',     price:'', style:'saffron',    status:'available' },
-  { id:'d3', name:'Ivory Temple Zari',       weave:'Soft ivory · fine gold thread lines',   price:'', style:'temple',     status:'available' },
-  { id:'d4', name:'Marigold Festive',        weave:'Warm ochre · occasion wear',            price:'', style:'marigold',   status:'available' }
-];
 const STYLE_MAT = { goldtissue:'mat-velvet', saffron:'mat-forest', temple:'mat-velvet', marigold:'mat-forest' };
 /* Categories are free-form: whatever the owner types in the admin panel becomes
    a category (e.g. "Kurthis", "Lehengas"). Older products were saved with short
@@ -48,20 +41,22 @@ function firebaseReady(){
 }
 
 async function loadProducts(){
-  if(!firebaseReady()) return DEFAULTS;
+  if(!firebaseReady()) return [];
   try{
     const { initializeApp } = await import('https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js');
-    const { getFirestore, collection, getDocs, query, orderBy } =
+    const { getFirestore, collection, getDocs, query, orderBy, where } =
       await import('https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js');
     const app = initializeApp(window.VESTRO_FIREBASE_CONFIG);
     const db = getFirestore(app);
-    const snap = await getDocs(query(collection(db,'products'), orderBy('createdAt','desc')));
+    /* archived pieces (and their photos) are never downloaded */
+    const snap = await getDocs(query(collection(db,'products'),
+      where('createdAt','>=',FRESH_START), orderBy('createdAt','desc')));
     const items = [];
     snap.forEach(d => items.push({ id:d.id, ...d.data() }));
-    return items.length ? items : DEFAULTS;
+    return items;
   }catch(err){
-    console.warn('Vestro: could not load products from Firebase, showing starter collection.', err);
-    return DEFAULTS;
+    console.warn('Vestro: could not load products from Firebase.', err);
+    return [];
   }
 }
 
@@ -105,7 +100,7 @@ const barToggle = document.getElementById('cartToggle');
 if(!grid) return;
 
 let products = await loadProducts();
-products = products.filter(p => p.status !== 'hidden');
+products = products.filter(p => p.status !== 'hidden' && (p.createdAt || 0) >= FRESH_START);
 
 /* drop basket items whose product no longer exists / is hidden or sold out */
 let cart = readCart().filter(c => products.some(p => p.id === c.id && p.status !== 'soldout'));
@@ -146,7 +141,9 @@ function drapeFor(p){
   const cover = imagesOf(p)[0];
   if(cover){
     const d = el('div','drape drape-photo');
-    d.style.backgroundImage = `url("${cover.replace(/"/g,'%22')}")`;
+    const img = el('span','drape-img');
+    img.style.backgroundImage = `url("${cover.replace(/"/g,'%22')}")`;
+    d.appendChild(img);
     return d;
   }
   const style = STYLE_MAT[p.style] ? p.style : 'goldtissue';
@@ -234,7 +231,6 @@ function updateBar(){
 
 function cardFor(p, i){
   const card = el('article','card reveal');
-  card.setAttribute('data-tilt','');
   if(i) card.style.transitionDelay = (Math.min(i,4) * .08) + 's';
 
   const inner = el('div','card-inner');
@@ -323,16 +319,36 @@ function renderCats(){
 
 function bindFx(scope){
   scope.querySelectorAll('.reveal').forEach(n=> io.observe(n));
-  if(finePointer && !reduced){
-    scope.querySelectorAll('[data-tilt]').forEach(attachTilt);
-  }
+}
+
+/* shown while the collection has no pieces */
+function emptyState(){
+  const box = el('div','empty reveal');
+  const NS = 'http://www.w3.org/2000/svg';
+  const orn = document.createElementNS(NS,'svg');
+  orn.setAttribute('class','orn'); orn.setAttribute('aria-hidden','true');
+  const use = document.createElementNS(NS,'use');
+  use.setAttribute('href','#paisley');
+  orn.appendChild(use);
+  box.appendChild(orn);
+  const h = el('h3', null, 'The new collection is ');
+  h.appendChild(el('em', null, 'on its way'));
+  box.appendChild(h);
+  box.appendChild(el('p', null, 'We are choosing the first pieces of a new chapter, one at a time. Message us on WhatsApp for a private preview, or to be the first to know when they arrive.'));
+  const row = el('div','cta-row');
+  const a = el('a','btn btn-primary','Request a preview');
+  a.href = `https://wa.me/${WA}?text=${encodeURIComponent("Hi Vestro by RA! I'd love a preview of the new collection ✨")}`;
+  a.target = '_blank'; a.rel = 'noopener';
+  row.appendChild(a);
+  box.appendChild(row);
+  return box;
 }
 
 function renderGrid(){
   grid.textContent = '';
   const list = activeCat === 'all' ? products : products.filter(p => catOf(p) === activeCat);
   if(list.length === 0){
-    grid.appendChild(el('p','lead','New drop loading — message us on WhatsApp to see what’s in ✨'));
+    grid.appendChild(emptyState());
   }else{
     list.forEach((p,i)=> grid.appendChild(cardFor(p,i)));
   }
@@ -466,26 +482,10 @@ if(barClear) barClear.addEventListener('click', ()=>{
 });
 updateBar();
 
-/* ---------- reveal + tilt helpers ---------- */
+/* ---------- reveal helper ---------- */
 const io = new IntersectionObserver((entries)=>{
   entries.forEach(e=>{ if(e.isIntersecting){ e.target.classList.add('in'); io.unobserve(e.target); } });
 },{threshold:.15});
-
-function attachTilt(card){
-  const max = 9;
-  card.addEventListener('pointermove', e=>{
-    const r = card.getBoundingClientRect();
-    const px = (e.clientX - r.left)/r.width;
-    const py = (e.clientY - r.top)/r.height;
-    card.style.setProperty('--ry', ((px - .5)*max*2).toFixed(2)+'deg');
-    card.style.setProperty('--rx', ((.5 - py)*max*2).toFixed(2)+'deg');
-    card.style.setProperty('--mx', (px*100).toFixed(1)+'%');
-    card.style.setProperty('--my', (py*100).toFixed(1)+'%');
-  });
-  card.addEventListener('pointerleave', ()=>{
-    card.style.setProperty('--rx','0deg'); card.style.setProperty('--ry','0deg');
-  });
-}
 
 /* ---------- first paint ---------- */
 renderCats();

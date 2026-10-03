@@ -13,5 +13,10 @@ window.VESTRO_FIREBASE_CONFIG = {
   appId: "1:985820046736:web:df0680571cae3534243f15"
 };
 
+/* Fresh start — products added before this moment (3 Oct 2026) are archived:
+   the shop never shows them, and the admin portal lists them separately so
+   they can be brought back or deleted. Set to 0 to show everything again. */
+window.VESTRO_FRESH_START = 1791018833803;
+
 /* Your WhatsApp number — country code + number, digits only */
 window.VESTRO_WHATSAPP = "97466194953";
