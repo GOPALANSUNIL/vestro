@@ -13,6 +13,10 @@
   --gold-grad:linear-gradient(135deg,#ecc876 0%,#d7a640 48%,#c08a2a 100%);
   --rose:#c93b78;             /* the logo's pink "R"       */
   --azure:#4f74d8;            /* the logo's blue "A"       */
+  --coral:#e2783a;            /* the logo's watercolour    */
+  --teal:#1f8f8a;
+  --plum:#8a4fc7;
+  --splash:linear-gradient(90deg,#e9508f,#f39a3d 22%,#e6c067 44%,#2ea6a0 66%,#4f74d8 84%,#8a4fc7);
   --line:rgba(43,33,24,.13);
   --line-gold:rgba(200,150,46,.42);
   --display:'Cormorant Garamond','Cormorant',Georgia,serif;
@@ -149,7 +153,11 @@ h2{font-size:clamp(2.6rem,5.4vw,4.4rem);margin:1.2rem 0 1.4rem}
 }
 .hero-content{position:relative;z-index:2;padding:9.5rem 0 6.5rem}
 .hero h1{font-size:clamp(3.6rem,10.5vw,9rem);margin-top:1.6rem;letter-spacing:-.02em;line-height:.95}
-.hero h1 .gold-word{display:block;padding-left:.55em}
+.hero h1 .gold-word{
+  display:block;width:fit-content;padding:0 .12em .12em .55em;
+  background:linear-gradient(100deg,var(--rose) 18%,var(--coral) 55%,var(--gold) 95%);
+  -webkit-background-clip:text;background-clip:text;color:transparent;
+}
 .hero .lead{margin:2.2rem 0 2.8rem;max-width:46ch}
 .cta-row{display:flex;gap:1rem;flex-wrap:wrap;align-items:center}
 .btn{
@@ -186,17 +194,17 @@ h2{font-size:clamp(2.6rem,5.4vw,4.4rem);margin:1.2rem 0 1.4rem}
 }
 
 /* ============ PROMISE STRIP ============ */
-.promise{background:var(--paper-2);border-block:1px solid var(--line-gold)}
+.promise{background:var(--gold-grad);color:var(--gold-ink)}
 .promise-inner{display:grid;grid-template-columns:repeat(4,1fr)}
-.promise-item{padding:2.2rem 1.4rem;text-align:center;border-left:1px solid var(--line-gold)}
+.promise-item{padding:2.2rem 1.4rem;text-align:center;border-left:1px solid rgba(43,28,5,.2)}
 .promise-item:first-child{border-left:none}
-.promise-item b{display:block;font-family:var(--display);font-weight:500;font-style:italic;font-size:1.45rem;color:var(--gold-text);line-height:1.2}
-.promise-item span{font-size:.62rem;letter-spacing:.3em;text-transform:uppercase;color:var(--taupe)}
+.promise-item b{display:block;font-family:var(--display);font-weight:600;font-style:italic;font-size:1.5rem;line-height:1.2}
+.promise-item span{font-size:.62rem;letter-spacing:.3em;text-transform:uppercase;font-weight:400}
 @media(max-width:760px){
   .promise-inner{grid-template-columns:repeat(2,1fr)}
   .promise-item{padding:1.6rem .8rem}
   .promise-item:nth-child(3){border-left:none}
-  .promise-item:nth-child(n+3){border-top:1px solid var(--line-gold)}
+  .promise-item:nth-child(n+3){border-top:1px solid rgba(43,28,5,.2)}
   .promise-item b{font-size:1.2rem}
 }
 
@@ -481,7 +489,10 @@ h2{font-size:clamp(2.6rem,5.4vw,4.4rem);margin:1.2rem 0 1.4rem}
 .route-city-big{font-family:var(--display);font-size:25px;font-style:italic;fill:var(--ink)}
 .steps{margin-top:2.6rem;border-top:1px solid var(--line)}
 .step{display:flex;gap:1.6rem;align-items:baseline;padding:1.4rem 0;border-bottom:1px solid var(--line)}
-.step-num{font-family:var(--display);font-style:italic;color:var(--gold-text);font-size:1.5rem;line-height:1;min-width:2.2rem}
+.step:nth-child(1) .step-num{color:var(--rose)}
+.step:nth-child(2) .step-num{color:var(--coral)}
+.step:nth-child(3) .step-num{color:var(--teal)}
+.step-num{font-family:var(--display);font-style:italic;font-weight:500;font-size:1.5rem;line-height:1;min-width:2.2rem}
 .step h4{font-family:var(--display);font-weight:500;font-size:1.3rem;line-height:1.2;margin-bottom:.2rem}
 .step p{font-size:.92rem;color:var(--taupe)}
 .gift-extra{margin-top:1.6rem;font-size:.9rem;color:var(--taupe);display:grid;gap:.4rem}
@@ -491,7 +502,11 @@ h2{font-size:clamp(2.6rem,5.4vw,4.4rem);margin:1.2rem 0 1.4rem}
 .why-grid{display:grid;grid-template-columns:repeat(4,1fr);margin-top:3.6rem;position:relative;z-index:1;border-top:1px solid var(--line)}
 .why{padding:2.4rem 1.8rem 0 0;margin-right:1.8rem;border-right:1px solid var(--line)}
 .why:last-child{border-right:none;margin-right:0;padding-right:0}
-.why svg{width:30px;height:30px;stroke:var(--gold-text);fill:none;stroke-width:1.1;margin-bottom:1.4rem}
+.why svg{width:34px;height:34px;stroke:var(--rose);fill:none;stroke-width:1.2;margin-bottom:1.4rem}
+/* one logo colour each */
+.why:nth-child(2) svg{stroke:var(--coral)}
+.why:nth-child(3) svg{stroke:var(--teal)}
+.why:nth-child(4) svg{stroke:var(--azure)}
 .why h3{font-family:var(--display);font-weight:500;font-size:1.55rem;line-height:1.15;margin-bottom:.5rem}
 .why p{font-size:.92rem;color:var(--taupe)}
 @media(max-width:980px){
@@ -503,8 +518,10 @@ h2{font-size:clamp(2.6rem,5.4vw,4.4rem);margin:1.2rem 0 1.4rem}
 /* ============ STORY — linen, with a faint wash of the logo's pink and blue ============ */
 .story{
   background:
-    radial-gradient(55% 80% at 8% 0%,rgba(201,59,120,.08),transparent 70%),
-    radial-gradient(55% 80% at 92% 100%,rgba(79,116,216,.08),transparent 70%),
+    radial-gradient(45% 70% at 4% 0%,rgba(233,80,143,.3),transparent 70%),
+    radial-gradient(40% 60% at 30% 100%,rgba(243,154,61,.22),transparent 70%),
+    radial-gradient(45% 70% at 96% 100%,rgba(79,116,216,.28),transparent 70%),
+    radial-gradient(40% 60% at 72% 0%,rgba(46,166,160,.2),transparent 70%),
     var(--paper-2);
   text-align:center;
 }
@@ -531,7 +548,8 @@ h2{font-size:clamp(2.6rem,5.4vw,4.4rem);margin:1.2rem 0 1.4rem}
 .order-handles a:hover{color:var(--rose);border-color:var(--rose)}
 
 /* ============ FOOTER ============ */
-footer{background:var(--paper-2);border-top:1px solid var(--line-gold);padding:5rem 0 2.2rem;font-size:.88rem;color:var(--taupe)}
+footer{background:var(--paper-2);position:relative;padding:5rem 0 2.2rem;font-size:.88rem;color:var(--taupe)}
+footer::before{content:"";position:absolute;inset:0 0 auto 0;height:4px;background:var(--splash)}
 .foot-grid{display:grid;grid-template-columns:1.5fr 1fr 1.2fr;gap:clamp(2rem,5vw,5rem);align-items:start}
 .foot-col{display:flex;flex-direction:column;gap:.6rem;align-items:flex-start}
 .foot-brand .brand-name{font-size:1.9rem}
