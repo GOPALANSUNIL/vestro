@@ -3,4 +3,4 @@ Allow: /
 Disallow: /admin/
 Disallow: /admin.html
 
-Sitemap: https://vestrobyra.com/sitemap.xml
+Sitemap: https://vestrobyra.com.qa/sitemap.xml
