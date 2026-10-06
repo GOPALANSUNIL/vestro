@@ -2,8 +2,12 @@
 
 Handpicked kasavu & festive saree boutique. Doha, Qatar · free delivery · cash on delivery.
 
-**Live shop:** https://infinitywomansgym.github.io/vestro/
-**Admin portal:** https://infinitywomansgym.github.io/vestro/admin
+**Live shop:** https://vestrobyra.com.qa/
+**Admin portal:** https://vestrobyra.com.qa/admin.html
+
+The domain is registered with QHOST; its DNS is managed in Cloudflare (records set to
+"DNS only", pointing at GitHub Pages). To change the domain, edit `CNAME`, `sitemap.xml`
+and `robots.txt`, then update the DNS records.
 
 ## How it works
 
