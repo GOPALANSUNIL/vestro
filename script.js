@@ -323,7 +323,7 @@ document.querySelectorAll('.reveal').forEach(window.VESTRO_REVEAL);
   scene.add(group);
 
   /* a little under full brightness, so the folds keep their shading on a pale page */
-  scene.add(new THREE.AmbientLight(0xfff6e6, .52));
+  const ambient = new THREE.AmbientLight(0xfff6e6, .52); scene.add(ambient);
   const key = new THREE.DirectionalLight(0xfff1d6, .36); key.position.set(4,6,6); scene.add(key);
   const rim = new THREE.PointLight(0xd9b36a, .1, 60); rim.position.set(-7,-2,5); scene.add(rim);
 
@@ -346,15 +346,31 @@ document.querySelectorAll('.reveal').forEach(window.VESTRO_REVEAL);
     geo.computeVertexNormals();
   }
 
-  /* size to hero */
+  /* size to hero. On a tall screen (phone, tablet held upright) the wide cloth
+     would show only a thin, flat slice, so it is turned upright and scaled until
+     it covers the whole first screen, folds and all. */
   function resize(){
     const w = hero.clientWidth, h = hero.clientHeight;
     renderer.setSize(w, h, false);
     camera.aspect = w/h;
     camera.updateProjectionMatrix();
+    const visH = 2 * camera.position.z * Math.tan(camera.fov * Math.PI/360);
+    const visW = visH * camera.aspect;
+    if(camera.aspect < 1){
+      const s = Math.max(visH*1.6/W, visW*1.6/H);
+      group.scale.setScalar(s);
+      group.rotation.z = Math.PI/2 - 0.18;
+      group.position.set(0, 0, 0);
+      ambient.intensity = .74;
+    }else{
+      ambient.intensity = .52;
+      group.scale.setScalar(1);
+      group.rotation.z = -0.10;
+      group.position.set(1.4, -0.15, 0);
+    }
     renderer.render(scene, camera);
   }
-  window.addEventListener('resize', resize); resize();
+  window.addEventListener('resize', resize); window.addEventListener('orientationchange', resize); resize();
 
   /* mouse parallax */
   let tx = 0, ty = 0;
@@ -376,7 +392,8 @@ document.querySelectorAll('.reveal').forEach(window.VESTRO_REVEAL);
   /* animate only while the hero is on screen — saves phone battery further down the page */
   let visible = true, raf = null;
   function loop(ms){
-    const t = ms*0.001;
+    /* scrolling also pushes the ripple along, so the cloth answers a thumb as well as a mouse */
+    const t = ms*0.001 + window.scrollY*0.004;
     wave(t);
     group.rotation.y += ((baseRY + tx*0.12) - group.rotation.y)*0.05;
     group.rotation.x += ((baseRX + ty*0.08) - group.rotation.x)*0.05;

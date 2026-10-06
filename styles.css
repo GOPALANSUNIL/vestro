@@ -153,9 +153,12 @@ h2{font-size:clamp(2.6rem,5.4vw,4.4rem);margin:1.2rem 0 1.4rem}
     linear-gradient(180deg,var(--paper) 0%,rgba(251,247,239,.9) 9%,transparent 20%); /* keeps the menu readable over the cloth */
 }
 @media(max-width:860px){
-  /* on narrow screens the silk sits behind the words — keep it a whisper */
+  /* on narrow screens the cloth sits behind the words: a soft veil keeps the
+     writing readable while the folds and the shimmer stay clearly visible */
   .hero-scrim{background:
-    linear-gradient(0deg,var(--paper) 0%,rgba(251,247,239,.93) 28%,rgba(251,247,239,.9) 100%)}
+    linear-gradient(180deg,var(--paper) 0%,rgba(251,247,239,.55) 9%,rgba(251,247,239,.30) 22%,rgba(251,247,239,.30) 70%,rgba(251,247,239,.55) 88%,var(--paper) 100%)}
+  .hero .lead{color:#4f4239}
+  .hero-meta{color:#5d4f45}
 }
 .hero-content{position:relative;z-index:2;padding:9.5rem 0 6.5rem}
 .hero h1{font-size:clamp(3.6rem,10.5vw,9rem);margin-top:1.6rem;letter-spacing:-.02em;line-height:.95}
