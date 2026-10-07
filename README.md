@@ -1,6 +1,6 @@
 # Vestro by RA — Unlock Your Era
 
-Handpicked kasavu & festive saree boutique. Doha, Qatar · free delivery · cash on delivery.
+Handpicked kasavu & festive saree boutique. Doha, Qatar · delivery across Qatar · cash on delivery.
 
 **Live shop:** https://vestrobyra.com.qa/
 **Admin portal:** https://vestrobyra.com.qa/admin.html
@@ -30,7 +30,8 @@ brought back or deleted. Set the value to `0` to show everything again.
 | File | Purpose |
 |---|---|
 | `index.html` / `styles.css` / `script.js` | The shop — layout, design, 3D silk hero |
-| `catalog.js` | Loads products from Firebase + the WhatsApp order basket |
+| `feed.js` | Starts downloading the products as the page opens (names first, then small previews, then full photos) |
+| `catalog.js` | Draws the products + the WhatsApp order basket |
 | `admin.html` (+ `admin/`) | Admin portal, reachable at `/admin` |
 | `firebase-config.js` | Firebase keys + WhatsApp numbers |
 | `logo.png` / `logo-mark.png` | Brand logo and round emblem |

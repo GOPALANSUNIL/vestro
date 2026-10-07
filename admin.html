@@ -440,6 +440,7 @@ async function init(){
       renderList();
       renderArchived();
       if($('archView').open) loadArchived();
+      addMissingThumbs();
     }catch(err){
       if(run !== loadRun) return;
       console.error(err);
@@ -649,6 +650,7 @@ async function init(){
           dropLocal(p.id);
           products.unshift(p);
           renderList(); renderArchived();
+          addMissingThumbs();
         });
       }else{
         actions.appendChild(sel);
@@ -832,6 +834,49 @@ async function init(){
     });
   }
 
+  /* A small preview of the cover photo, saved with the product as "thumb". The
+     shop downloads these first (see feed.js), so the pieces appear straight away
+     and the full photos follow. */
+  function makeThumb(src){
+    return new Promise(resolve=>{
+      if(!src){ resolve(''); return; }
+      const img = new Image();
+      img.onload = ()=>{
+        const scale = Math.min(1, 480 / Math.max(img.width, img.height));
+        const c = document.createElement('canvas');
+        c.width = Math.max(1, Math.round(img.width * scale));
+        c.height = Math.max(1, Math.round(img.height * scale));
+        const ctx = c.getContext('2d');
+        ctx.fillStyle = '#fff';
+        ctx.fillRect(0, 0, c.width, c.height);
+        ctx.drawImage(img, 0, 0, c.width, c.height);
+        resolve(c.toDataURL('image/jpeg', .72));
+      };
+      img.onerror = ()=> resolve('');
+      img.src = src;
+    });
+  }
+
+  /* pieces saved before previews existed get one now — quietly, one at a time */
+  let thumbing = false;
+  async function addMissingThumbs(){
+    if(thumbing) return;
+    thumbing = true;
+    try{
+      for(const p of [...products]){
+        const cover = (p.images && p.images[0]) || p.image;
+        if(p.thumb || !cover) continue;
+        const thumb = await makeThumb(cover);
+        if(!thumb) continue;
+        await updateDoc(doc(db,'products',p.id), { thumb });
+        p.thumb = thumb;
+      }
+    }catch(err){
+      console.warn('Vestro: could not save a preview photo.', err);
+    }
+    thumbing = false;
+  }
+
   async function compressImage(file, maxSide=900){
     const bmp = await loadBitmap(file);
     const scale = Math.min(1, maxSide / Math.max(bmp.width, bmp.height));
@@ -900,8 +945,9 @@ async function init(){
     }
     const run = formRun, target = editing, ref = formRef;
     const here = () => run === formRun;   /* is this form still the one on screen? */
-    const data = target ? payload : { ...payload, createdAt: stamp };
     btn.disabled = true; formMsg('Saving…', 'busy');
+    payload.thumb = await makeThumb(payload.images[0]);
+    const data = target ? payload : { ...payload, createdAt: stamp };
 
     let done = false, failure = null;
     const landed = ()=>{

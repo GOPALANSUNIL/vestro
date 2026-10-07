@@ -82,9 +82,16 @@ document.querySelectorAll('.reveal').forEach(window.VESTRO_REVEAL);
   update();
 })();
 
+/* three.js (the 3D silk) is a large file, so it loads in the background and the
+   words and products never wait for it; the silk starts the moment it arrives */
+function whenThree(fn){
+  if(window.THREE){ fn(); return; }
+  const lib = document.getElementById('threeLib');
+  if(lib) lib.addEventListener('load', ()=>{ if(window.THREE) fn(); });
+}
+
 /* ---------- 3D SILK SASH: twisting ribbon streaming across the band ---------- */
-(function(){
-  if(!window.THREE) return;
+whenThree(function(){
   const wrap = document.getElementById('ribbonWrap');
   const canvas = document.getElementById('ribbon');
   if(!wrap || !canvas) return;
@@ -219,7 +226,7 @@ document.querySelectorAll('.reveal').forEach(window.VESTRO_REVEAL);
   document.addEventListener('visibilitychange', ()=>{
     if(document.hidden){ stop(); } else if(visible){ start(); }
   });
-})();
+});
 
 /* ---------- DOHA → KERALA PARCEL ---------- */
 (function(){
@@ -247,8 +254,7 @@ document.querySelectorAll('.reveal').forEach(window.VESTRO_REVEAL);
 })();
 
 /* ---------- THREE.JS FLOWING SILK (ivory kasavu, gold + wine border) ---------- */
-(function(){
-  if(!window.THREE) return;
+whenThree(function(){
   const canvas = document.getElementById('silk');
   const hero = document.querySelector('.hero');
   if(!canvas || !hero) return;
@@ -371,6 +377,7 @@ document.querySelectorAll('.reveal').forEach(window.VESTRO_REVEAL);
     renderer.render(scene, camera);
   }
   window.addEventListener('resize', resize); window.addEventListener('orientationchange', resize); resize();
+  canvas.classList.add('on');   /* fades in (see styles.css) rather than popping in late */
 
   /* mouse parallax */
   let tx = 0, ty = 0;
@@ -411,5 +418,5 @@ document.querySelectorAll('.reveal').forEach(window.VESTRO_REVEAL);
   document.addEventListener('visibilitychange', ()=>{
     if(document.hidden){ stop(); } else if(visible){ start(); }
   });
-})();
+});
 })();
