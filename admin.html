@@ -73,6 +73,7 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--gold)}
 .hint{font-size:.78rem;color:var(--taupe);margin-top:.3rem}
 .form-msg{margin-top:1rem;font-size:.88rem;color:#9a3c14;min-height:1.3em}
 .form-msg.ok{color:var(--ok)}
+.form-msg.busy{color:var(--taupe)}
 
 /* login */
 #loginView{max-width:430px;margin:3.5rem auto 0}
@@ -88,6 +89,8 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--gold)}
 /* dashboard */
 .dash-head{display:flex;align-items:center;justify-content:space-between;gap:1rem;flex-wrap:wrap;margin-bottom:1.4rem}
 .count-pill{font-size:.74rem;letter-spacing:.16em;text-transform:uppercase;color:var(--taupe)}
+.list-note{font-size:.92rem;color:var(--taupe);margin-bottom:1rem}
+.list-note .btn{margin-left:.6rem}
 #list{display:grid;gap:.9rem}
 .row{display:flex;gap:1.1rem;align-items:center;background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:.9rem 1.1rem;flex-wrap:wrap}
 .thumb{width:74px;height:74px;border-radius:12px;flex:none;background-size:cover;background-position:center top;border:1px solid var(--line)}
@@ -217,6 +220,7 @@ footer{padding:1.6rem 0;text-align:center;font-size:.72rem;letter-spacing:.16em;
       </div>
       <button class="btn btn-primary" id="addBtn">+ Add product</button>
     </div>
+    <p class="list-note hiddenview" id="listNote"></p>
     <div id="list"></div>
     <div id="emptyState" class="hiddenview">
       <p>Your new collection is empty — the shop shows a “collection on its way” note until you add the first piece.</p>
@@ -323,7 +327,7 @@ async function init(){
   const { initializeApp } = await import('https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js');
   const { getAuth, onAuthStateChanged, signInWithEmailAndPassword, signOut } =
     await import('https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js');
-  const { getFirestore, collection, getDocs, query, orderBy, addDoc, updateDoc, deleteDoc, doc } =
+  const { getFirestore, collection, getDocs, getCountFromServer, query, where, orderBy, setDoc, updateDoc, deleteDoc, doc } =
     await import('https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js');
 
   const app = initializeApp(cfg);
@@ -331,12 +335,21 @@ async function init(){
   const db = getFirestore(app);
   const col = collection(db,'products');
 
+  let formRun = 0;   /* goes up each time the add / edit page opens or closes */
+
   /* ---------- auth ---------- */
   onAuthStateChanged(auth, user=>{
     show($('loginView'), !user);
-    show($('dashView'), !!user);
     show($('signOutBtn'), !!user);
-    if(user) refresh();
+    if(!user){
+      /* signed out — possibly from the add / edit page */
+      formRun++;
+      show($('formView'), false);
+      show($('dashView'), false);
+      return;
+    }
+    if($('formView').classList.contains('hiddenview')) show($('dashView'));
+    refresh();
   });
 
   $('loginForm').addEventListener('submit', async e=>{
@@ -363,37 +376,94 @@ async function init(){
 
   /* ---------- products list ---------- */
   const STATUS_LABEL = { available:'Available', soldout:'Sold out', hidden:'Hidden' };
+  /* a product saved without a status is shown by the shop as available */
+  const statusOf = p => STATUS_LABEL[p.status] ? p.status : 'available';
   let products = [];
+  let loaded = false;
+  let loadRun = 0;   /* only the newest load may update the page */
 
   /* pieces added before the fresh start (see firebase-config.js) are kept
-     out of the shop and listed separately under "Archived" */
+     out of the shop and listed separately under "Archived". Their photos are
+     heavy, so they are only downloaded when that section is opened. */
   const FRESH_START = window.VESTRO_FRESH_START || 0;
-  let archived = [];
+  let archived = null;       /* null = not downloaded yet */
+  let archivedCount = 0;     /* null = could not be counted */
+
+  function listNote(text, retry){
+    const n = $('listNote');
+    n.textContent = text || '';
+    show(n, !!text);
+    if(retry){
+      const b = document.createElement('button');
+      b.type = 'button'; b.className = 'btn btn-ghost mini'; b.textContent = 'Try again';
+      b.addEventListener('click', retry);
+      n.appendChild(b);
+    }
+  }
 
   async function refresh(){
-    const snap = await getDocs(query(col, orderBy('createdAt','desc')));
-    products = []; archived = [];
-    snap.forEach(d =>{
-      const p = { id:d.id, ...d.data() };
-      ((p.createdAt || 0) >= FRESH_START ? products : archived).push(p);
-    });
-    renderList();
+    const run = ++loadRun;
+    if(!loaded) listNote('Loading your collection…');
+    try{
+      const [snap, count] = await Promise.all([
+        getDocs(query(col, where('createdAt','>=',FRESH_START), orderBy('createdAt','desc'))),
+        FRESH_START
+          ? getCountFromServer(query(col, where('createdAt','<',FRESH_START))).then(s => s.data().count, () => null)
+          : 0
+      ]);
+      if(run !== loadRun) return;
+      products = snap.docs.map(d => ({ id:d.id, ...d.data() }));
+      archived = null; archivedCount = count;
+      loaded = true;
+      listNote('');
+      renderList();
+      renderArchived();
+      if($('archView').open) loadArchived();
+    }catch(err){
+      if(run !== loadRun) return;
+      console.error(err);
+      listNote('Could not load your collection — check your internet connection.', refresh);
+    }
   }
+
+  async function loadArchived(){
+    const run = loadRun, arch = $('archList');
+    arch.textContent = 'Loading…';
+    try{
+      const snap = await getDocs(query(col, where('createdAt','<',FRESH_START), orderBy('createdAt','desc')));
+      if(run !== loadRun) return;
+      archived = snap.docs.map(d => ({ id:d.id, ...d.data() }));
+      archivedCount = archived.length;
+      renderArchived();
+    }catch(err){
+      if(run !== loadRun) return;
+      console.error(err);
+      arch.textContent = 'Could not load these — check your internet, then close and open this section again.';
+    }
+  }
+  $('archView').addEventListener('toggle', ()=>{
+    if($('archView').open && archived === null) loadArchived();
+  });
 
   function renderList(){
     const list = $('list');
     list.textContent = '';
-    show($('emptyState'), products.length === 0);
+    show($('emptyState'), loaded && products.length === 0);
     const visible = products.filter(p=>p.status!=='hidden').length;
     $('countPill').textContent = products.length
       ? `${products.length} product${products.length>1?'s':''} · ${visible} visible on the site`
       : '';
     products.forEach(p => list.appendChild(rowFor(p, false)));
+  }
 
+  function renderArchived(){
+    show($('archView'), archivedCount !== 0);
+    $('archCount').textContent = archivedCount == null
+      ? 'Archived — earlier pieces'
+      : `Archived — ${archivedCount} earlier piece${archivedCount>1?'s':''}`;
+    if(archived === null) return;
     const arch = $('archList');
     arch.textContent = '';
-    show($('archView'), archived.length > 0);
-    $('archCount').textContent = `Archived — ${archived.length} earlier piece${archived.length>1?'s':''}`;
     archived.forEach(p => arch.appendChild(rowFor(p, true)));
   }
 
@@ -418,17 +488,21 @@ async function init(){
       const actions = document.createElement('div'); actions.className = 'row-actions';
 
       const sel = document.createElement('select');
-      sel.className = 'status-sel s-' + p.status;
+      sel.className = 'status-sel s-' + statusOf(p);
       for(const [val,label] of Object.entries(STATUS_LABEL)){
         const o = document.createElement('option');
-        o.value = val; o.textContent = label; o.selected = p.status === val;
+        o.value = val; o.textContent = label; o.selected = statusOf(p) === val;
         sel.appendChild(o);
       }
       sel.addEventListener('change', async ()=>{
+        const next = sel.value;
         sel.disabled = true;
-        await updateDoc(doc(db,'products',p.id), { status: sel.value });
-        p.status = sel.value;
-        sel.className = 'status-sel s-' + p.status; sel.disabled = false;
+        try{
+          await updateDoc(doc(db,'products',p.id), { status: next });
+          p.status = next;
+        }catch(err){
+          alert('Could not change the status — check your internet and try again.');
+        }
         renderList();
       });
       const edit = document.createElement('button');
@@ -438,8 +512,18 @@ async function init(){
         edit.textContent = 'Bring back';
         edit.addEventListener('click', async ()=>{
           edit.disabled = true;
-          await updateDoc(doc(db,'products',p.id), { createdAt: Date.now() });
-          refresh();
+          const createdAt = Date.now();
+          try{
+            await updateDoc(doc(db,'products',p.id), { createdAt });
+          }catch(err){
+            edit.disabled = false;
+            alert('Could not bring it back — check your internet and try again.');
+            return;
+          }
+          p.createdAt = createdAt;
+          dropLocal(p.id);
+          products.unshift(p);
+          renderList(); renderArchived();
         });
       }else{
         actions.appendChild(sel);
@@ -455,8 +539,15 @@ async function init(){
           ? `Delete "${p.name}" forever? Its photos cannot be recovered.`
           : `Delete "${p.name}" forever? (Tip: choose "Hidden" instead if it may come back.)`)) return;
         del.disabled = true;
-        await deleteDoc(doc(db,'products',p.id));
-        refresh();
+        try{
+          await deleteDoc(doc(db,'products',p.id));
+        }catch(err){
+          del.disabled = false;
+          alert('Could not delete it — check your internet and try again.');
+          return;
+        }
+        dropLocal(p.id);
+        renderList(); renderArchived();
       });
       actions.appendChild(del);
 
@@ -464,11 +555,28 @@ async function init(){
       return row;
   }
 
+  /* take a product out of the lists already on the page */
+  function dropLocal(id){
+    products = products.filter(x => x.id !== id);
+    if(archived){
+      archived = archived.filter(x => x.id !== id);
+      archivedCount = archived.length;
+    }
+  }
+
   /* ---------- add / edit page ---------- */
   const MAX_PHOTOS = 4;
   let editing = null;      /* product being edited, or null for new */
+  let formRef = null;      /* where this form saves — pressing Save twice can never make two products */
   let photos = [];         /* compressed data-URLs, first = cover */
   let chosenStyle = 'goldtissue';
+
+  function formMsg(text, kind){
+    const m = $('formMsg');
+    m.textContent = text || '';
+    m.classList.toggle('ok', kind === 'ok');
+    m.classList.toggle('busy', kind === 'busy');
+  }
 
   function renderGallery(){
     const g = $('photoGallery');
@@ -504,6 +612,11 @@ async function init(){
     const extras = [...set].filter(c => !DEFAULT_CATS.includes(c)).sort((a,b)=> a.localeCompare(b));
     return [...DEFAULT_CATS, ...extras];
   }
+  /* "kurthis " and "Kurthis" are one category — reuse the spelling already in use */
+  function tidyCat(raw){
+    const c = String(raw || '').replace(/\s+/g,' ').trim();
+    return allCats().find(k => k.toLowerCase() === c.toLowerCase()) || c;
+  }
   function toggleNewCat(){
     const isNew = $('pCat').value === NEW_CAT;
     show($('pCatNew'), isNew);
@@ -526,7 +639,10 @@ async function init(){
   }
 
   function openForm(p){
+    formRun++;
     editing = p || null;
+    formRef = p ? doc(db,'products',p.id) : doc(col);
+    $('saveBtn').disabled = false;
     $('dlgTitle').textContent = p ? 'Edit product' : 'Add product';
     $('pName').value = p ? p.name : '';
     $('pWeave').value = p ? (p.weave || '') : '';
@@ -536,14 +652,15 @@ async function init(){
     fillCatSelect(p ? catLabel(p) : DEFAULT_CATS[0]);
     photos = p ? (p.images && p.images.length ? [...p.images] : (p.image ? [p.image] : [])) : [];
     setStyle(p && p.style ? p.style : 'goldtissue');
-    document.querySelector(`input[name=pStatus][value=${p ? p.status : 'available'}]`).checked = true;
-    $('formMsg').textContent = '';
+    document.querySelector(`input[name=pStatus][value=${p ? statusOf(p) : 'available'}]`).checked = true;
+    formMsg('');
     renderGallery();
     show($('dashView'), false);
     show($('formView'));
     window.scrollTo({ top: 0 });
   }
   function closeForm(){
+    formRun++;
     show($('formView'), false);
     show($('dashView'));
     window.scrollTo({ top: 0 });
@@ -564,15 +681,21 @@ async function init(){
     e.target.value = '';
     if(!files.length) return;
     const room = MAX_PHOTOS - photos.length;
-    if(room <= 0){ $('formMsg').textContent = `Maximum ${MAX_PHOTOS} photos per product — remove one first.`; return; }
-    $('formMsg').textContent = 'Preparing photos…';
+    if(room <= 0){ formMsg(`Maximum ${MAX_PHOTOS} photos per product — remove one first.`); return; }
+    const run = formRun;
+    formMsg('Preparing photos…', 'busy');
+    const ready = [];
     let failed = 0;
     for(const file of files.slice(0, room)){
-      try{ photos.push(await compressImage(file)); }
+      try{ ready.push(await compressImage(file)); }
       catch(err){ failed++; }
     }
-    $('formMsg').textContent = failed ? `${failed} photo(s) could not be read — try different ones.` :
-      (files.length > room ? `Only ${MAX_PHOTOS} photos allowed — extra ones were skipped.` : '');
+    /* the form was closed (or another product opened) while the photos were being prepared */
+    if(run !== formRun) return;
+    photos.push(...ready);
+    photos.length = Math.min(photos.length, MAX_PHOTOS);
+    formMsg(failed ? `${failed} photo(s) could not be read — try different ones.` :
+      (files.length > room ? `Only ${MAX_PHOTOS} photos allowed — extra ones were skipped.` : ''));
     renderGallery();
   });
 
@@ -596,7 +719,12 @@ async function init(){
     const c = document.createElement('canvas');
     c.width = Math.max(1, Math.round(bmp.width * scale));
     c.height = Math.max(1, Math.round(bmp.height * scale));
-    c.getContext('2d').drawImage(bmp, 0, 0, c.width, c.height);
+    const ctx = c.getContext('2d');
+    /* see-through PNGs would get a black background as JPEG */
+    ctx.fillStyle = '#fff';
+    ctx.fillRect(0, 0, c.width, c.height);
+    ctx.drawImage(bmp, 0, 0, c.width, c.height);
+    if(bmp.close) bmp.close();
     let q = 0.78, data = c.toDataURL('image/jpeg', q);
     while(data.length > 200000 && q > 0.35){
       q -= 0.1;
@@ -606,40 +734,86 @@ async function init(){
     return data;
   }
 
+  const sleep = ms => new Promise(r => setTimeout(r, ms));
+
+  /* The server can accept a save while its reply never reaches this page (weak
+     connection), which used to leave the form on "Saving…" for good. Products
+     are public to read, so ask the server directly whether this save arrived. */
+  async function saveLanded(id, stamp){
+    try{
+      const r = await fetch('https://firestore.googleapis.com/v1/projects/' + cfg.projectId +
+        '/databases/(default)/documents/products/' + id + '?mask.fieldPaths=updatedAt', { cache:'no-store' });
+      if(!r.ok) return false;
+      const v = ((await r.json()).fields || {}).updatedAt;
+      return !!v && Number(v.integerValue || v.doubleValue) === stamp;
+    }catch(e){ return false; }
+  }
+
+  function saveError(err){
+    const c = (err && err.code) || '';
+    if(c.includes('permission-denied')) return 'this login may not change products. Sign out, then sign in with the owner email.';
+    if(c.includes('not-found')) return 'this product no longer exists. Go back and add it again.';
+    return (err && err.message) || String(err);
+  }
+
   $('prodForm').addEventListener('submit', async e=>{
     e.preventDefault();
-    const btn = $('saveBtn'), msg = $('formMsg');
-    let category = $('pCat').value === NEW_CAT ? $('pCatNew').value.trim() : $('pCat').value.trim();
+    const btn = $('saveBtn');
+    if(btn.disabled) return;
+    const stamp = Date.now();
     const payload = {
       name: $('pName').value.trim(),
       weave: $('pWeave').value.trim(),
       price: $('pPrice').value.trim(),
       oldPrice: $('pOldPrice').value.trim(),
-      category: category,
-      images: photos,
-      image: photos[0] || '',
+      category: tidyCat($('pCat').value === NEW_CAT ? $('pCatNew').value : $('pCat').value),
+      images: [...photos],
+      image: '',   /* older saves kept a second copy of the cover here; "images" has it */
       style: chosenStyle,
-      status: document.querySelector('input[name=pStatus]:checked').value
+      status: document.querySelector('input[name=pStatus]:checked').value,
+      updatedAt: stamp
     };
-    if(!payload.name){ msg.textContent = 'Give the product a name.'; return; }
-    if(!payload.category){ msg.textContent = 'Choose a category, or type a name for the new one.'; return; }
+    if(!payload.name){ formMsg('Give the product a name.'); return; }
+    if(!payload.category){ formMsg('Choose a category, or type a name for the new one.'); $('pCatNew').focus(); return; }
     if(photos.reduce((s,p)=> s + p.length, 0) > 900000){
-      msg.textContent = 'These photos are too heavy together — remove one and try again.';
+      formMsg('These photos are too heavy together — remove one and try again.');
       return;
     }
-    btn.disabled = true; msg.textContent = 'Saving…';
-    try{
-      if(editing){
-        await updateDoc(doc(db,'products',editing.id), payload);
-      }else{
-        await addDoc(col, { ...payload, createdAt: Date.now() });
-      }
-      msg.classList.add('ok'); msg.textContent = 'Saved ✓';
-      setTimeout(()=>{ msg.classList.remove('ok'); closeForm(); }, 450);
-      refresh();
-    }catch(err){
-      msg.textContent = 'Could not save: ' + (err.message || err);
+    const run = formRun, target = editing, ref = formRef;
+    const here = () => run === formRun;   /* is this form still the one on screen? */
+    const data = target ? payload : { ...payload, createdAt: stamp };
+    btn.disabled = true; formMsg('Saving…', 'busy');
+
+    let done = false, failure = null;
+    const landed = ()=>{
+      if(done) return;
+      done = true;
+      /* put it in the list straight away, without downloading everything again */
+      products = products.filter(x => x.id !== ref.id);
+      products.push({ ...(target || {}), ...data, id: ref.id });
+      products.sort((a,b)=> (b.createdAt || 0) - (a.createdAt || 0));
+      renderList();
+      if(!here()) return;
+      formMsg('Saved ✓', 'ok');
+      setTimeout(()=>{ if(here()) closeForm(); }, 450);
+    };
+    const write = (target ? updateDoc(ref, data) : setDoc(ref, data))
+      .then(landed, err => { failure = err; });
+
+    /* wait for the reply; when it is slow, check with the server now and then */
+    const giveUp = Date.now() + 90000;
+    let pause = 8000;
+    while(!done && !failure && Date.now() < giveUp){
+      await Promise.race([write, sleep(pause)]);
+      if(done || failure) break;
+      if(await saveLanded(ref.id, stamp)){ landed(); break; }
+      if(here() && !done && !failure) formMsg('Still saving — the internet seems slow. Please keep this page open…', 'busy');
+      pause = 5000;
     }
+    if(done || !here()) return;
+    formMsg(failure
+      ? 'Could not save: ' + saveError(failure)
+      : 'Could not reach the server. Check your internet and press Save again — it will not create a second copy.');
     btn.disabled = false;
   });
 }
