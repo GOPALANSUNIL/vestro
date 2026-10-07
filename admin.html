@@ -113,8 +113,15 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--gold)}
 #emptyState{text-align:center;padding:3rem 1rem;color:var(--taupe)}
 #emptyState .btn{margin-top:1.2rem}
 #archView{margin-top:2.6rem;border-top:1px solid var(--line);padding-top:1.4rem}
-#archView summary{cursor:pointer;font-size:.74rem;letter-spacing:.16em;text-transform:uppercase;color:var(--taupe)}
+#archView summary,#catView summary{cursor:pointer;font-size:.74rem;letter-spacing:.16em;text-transform:uppercase;color:var(--taupe)}
 #archView .hint{margin:.8rem 0 1.1rem}
+#catView{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:.9rem 1.1rem;margin-bottom:1.1rem}
+#catView .hint{margin:.8rem 0 .4rem}
+.cat-line{display:flex;align-items:center;justify-content:space-between;gap:.8rem;padding:.6rem 0;border-bottom:1px solid var(--line)}
+.cat-line b{display:block;font-family:var(--display);font-weight:400;font-size:1.1rem}
+.cat-line small{font-size:.8rem;color:var(--taupe)}
+.cat-add{display:flex;gap:.6rem;align-items:center;flex-wrap:wrap;margin-top:1rem}
+.cat-add input{flex:1;min-width:170px}
 #archList{display:grid;gap:.9rem}
 #archList .thumb{filter:saturate(.6)}
 
@@ -221,6 +228,16 @@ footer{padding:1.6rem 0;text-align:center;font-size:.72rem;letter-spacing:.16em;
       <button class="btn btn-primary" id="addBtn">+ Add product</button>
     </div>
     <p class="list-note hiddenview" id="listNote"></p>
+    <details id="catView" class="hiddenview">
+      <summary id="catCount"></summary>
+      <p class="hint">A category appears on the website once it has a product that isn't hidden. Deleting a category takes it off the website: its products become “Hidden” but stay in your list below.</p>
+      <div id="catList"></div>
+      <form id="catAddForm" class="cat-add">
+        <input type="text" id="catAddInput" maxlength="30" placeholder="New category, e.g. Kurthis" aria-label="New category name" />
+        <button class="btn btn-ghost mini" type="submit">Add category</button>
+      </form>
+      <p class="form-msg" id="catMsg"></p>
+    </details>
     <div id="list"></div>
     <div id="emptyState" class="hiddenview">
       <p>Your new collection is empty — the shop shows a “collection on its way” note until you add the first piece.</p>
@@ -256,7 +273,7 @@ footer{padding:1.6rem 0;text-align:center;font-size:.72rem;letter-spacing:.16em;
       <label for="pCat">Category</label>
       <select id="pCat"></select>
       <input type="text" id="pCatNew" class="hiddenview" maxlength="30" placeholder="e.g. Kurthis" />
-      <p class="hint">Pick a category, or choose “➕ New category…” to add one — like Kurthis, Lehengas or Kids wear. New categories appear on the site automatically.</p>
+      <p class="hint">Pick a category, or choose “➕ New category…” to add one — like Kurthis, Lehengas or Kids wear. New categories appear on the site automatically. To remove one, open “Categories” on the collection page.</p>
 
       <label for="pName">Name *</label>
       <input type="text" id="pName" required maxlength="60" placeholder="e.g. Rose Gold Kasavu" />
@@ -299,9 +316,10 @@ footer{padding:1.6rem 0;text-align:center;font-size:.72rem;letter-spacing:.16em;
 const $ = id => document.getElementById(id);
 const show = (el, on=true) => el.classList.toggle('hiddenview', !on);
 
-/* Categories are free-form. These three always appear; anything the owner types
-   (e.g. "Kurthis") is added on top. Older products saved with short keys are
-   shown under their proper name. Keep this in sync with catalog.js. */
+/* Categories are free-form. The owner's list starts as these three; anything typed
+   (e.g. "Kurthis") is added to it, and the "Categories" section can delete from it.
+   Older products saved with short keys are shown under their proper name. Keep
+   this in sync with catalog.js. */
 const DEFAULT_CATS = ['Sarees', 'Modern wear', 'Work wear'];
 const LEGACY_CATS = { saree:'Sarees', modern:'Modern wear', workwear:'Work wear' };
 const NEW_CAT = '__new__';
@@ -327,7 +345,7 @@ async function init(){
   const { initializeApp } = await import('https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js');
   const { getAuth, onAuthStateChanged, signInWithEmailAndPassword, signOut } =
     await import('https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js');
-  const { getFirestore, collection, getDocs, getCountFromServer, query, where, orderBy, setDoc, updateDoc, deleteDoc, doc } =
+  const { getFirestore, collection, getDocs, getDoc, getCountFromServer, query, where, orderBy, setDoc, updateDoc, deleteDoc, doc, writeBatch } =
     await import('https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js');
 
   const app = initializeApp(cfg);
@@ -405,14 +423,17 @@ async function init(){
     const run = ++loadRun;
     if(!loaded) listNote('Loading your collection…');
     try{
-      const [snap, count] = await Promise.all([
+      const [snap, count, settings] = await Promise.all([
         getDocs(query(col, where('createdAt','>=',FRESH_START), orderBy('createdAt','desc'))),
         FRESH_START
           ? getCountFromServer(query(col, where('createdAt','<',FRESH_START))).then(s => s.data().count, () => null)
-          : 0
+          : 0,
+        getDoc(settingsRef)
       ]);
       if(run !== loadRun) return;
       products = snap.docs.map(d => ({ id:d.id, ...d.data() }));
+      const list = settings.exists() ? settings.data().categories : null;
+      savedCats = Array.isArray(list) ? list.filter(c => typeof c === 'string' && c.trim()) : null;
       archived = null; archivedCount = count;
       loaded = true;
       listNote('');
@@ -454,7 +475,111 @@ async function init(){
       ? `${products.length} product${products.length>1?'s':''} · ${visible} visible on the site`
       : '';
     products.forEach(p => list.appendChild(rowFor(p, false)));
+    syncCats();
+    renderCats();
   }
+
+  /* ---------- categories ---------- */
+  /* The owner's category list. It is kept in the products collection (the only
+     place the owner may write) as a document with no createdAt, so the product
+     lists here and on the shop — which all filter on createdAt — never pick it up. */
+  const settingsRef = doc(db,'products','shop-settings');
+  let savedCats = null;   /* null = never saved yet, so the three defaults */
+
+  /* the saved list, plus any category a product on the website is using */
+  function allCats(){
+    const list = [...(savedCats || DEFAULT_CATS)];
+    const extras = [];
+    products.forEach(p =>{
+      const c = catLabel(p);
+      if(statusOf(p) !== 'hidden' && !list.includes(c) && !extras.includes(c)) extras.push(c);
+    });
+    return [...list, ...extras.sort((a,b)=> a.localeCompare(b))];
+  }
+  function saveCats(list){
+    savedCats = list;
+    return setDoc(settingsRef, { kind:'settings', categories:list, updatedAt:Date.now() });
+  }
+  /* remember categories that are in use, so one stays in the dropdown even after
+     its last product is deleted — until it is deleted under "Categories" */
+  function syncCats(){
+    if(!loaded) return;
+    const want = allCats();
+    if(savedCats && savedCats.length === want.length) return;
+    saveCats(want).catch(err => console.warn('Vestro: could not save the category list.', err));
+  }
+  function catMsg(text){ $('catMsg').textContent = text || ''; }
+
+  function renderCats(){
+    const cats = allCats();
+    show($('catView'), loaded);
+    $('catCount').textContent = `Categories — ${cats.length} · add or delete`;
+    const box = $('catList');
+    box.textContent = '';
+    cats.forEach(c =>{
+      const mine = products.filter(p => catLabel(p) === c);
+      const onSite = mine.filter(p => statusOf(p) !== 'hidden').length;
+      const line = document.createElement('div'); line.className = 'cat-line';
+      const info = document.createElement('div');
+      const b = document.createElement('b'); b.textContent = c; info.appendChild(b);
+      const s = document.createElement('small');
+      s.textContent = onSite
+        ? `${onSite} product${onSite>1?'s':''} on the website`
+        : (mine.length ? 'All its products are hidden — not on the website' : 'No products yet — not on the website');
+      info.appendChild(s);
+      line.appendChild(info);
+      const del = document.createElement('button');
+      del.type = 'button'; del.className = 'btn btn-danger mini'; del.textContent = 'Delete';
+      del.addEventListener('click', ()=> deleteCat(c));
+      line.appendChild(del);
+      box.appendChild(line);
+    });
+  }
+
+  /* deleting a category takes it off the website: its products become Hidden
+     (kept in the list, nothing is lost) and it leaves the dropdown */
+  function deleteCat(c){
+    const shown = products.filter(p => catLabel(p) === c && statusOf(p) !== 'hidden');
+    const n = shown.length;
+    if(!confirm(n
+      ? `Delete the category "${c}"?\n\nIts ${n} product${n>1?'s':''} will be hidden from the website. ${n>1?'They stay':'It stays'} in your list as "Hidden", so nothing is lost.`
+      : `Delete the category "${c}"?`)) return;
+    const next = allCats().filter(x => x !== c);
+    const before = { cats: savedCats, status: shown.map(p => p.status) };
+    const batch = writeBatch(db);
+    shown.forEach(p => batch.update(doc(db,'products',p.id), { status:'hidden' }));
+    batch.set(settingsRef, { kind:'settings', categories:next, updatedAt:Date.now() });
+    shown.forEach(p => { p.status = 'hidden'; });
+    savedCats = next;
+    catMsg('');
+    renderList();
+    batch.commit().catch(err =>{
+      console.error(err);
+      shown.forEach((p,i) => { p.status = before.status[i]; });
+      savedCats = before.cats;
+      renderList();
+      catMsg(`Could not delete "${c}" — check your internet and try again.`);
+    });
+  }
+
+  $('catAddForm').addEventListener('submit', e=>{
+    e.preventDefault();
+    const c = $('catAddInput').value.replace(/\s+/g,' ').trim();
+    if(!c){ catMsg('Type a name for the new category.'); return; }
+    const cats = allCats();
+    if(cats.some(k => k.toLowerCase() === c.toLowerCase())){ catMsg(`"${c}" is already in your categories.`); return; }
+    const before = savedCats;
+    const saving = saveCats([...cats, c]);
+    $('catAddInput').value = '';
+    catMsg('');
+    renderCats();
+    saving.catch(err =>{
+      console.error(err);
+      savedCats = before;
+      renderCats();
+      catMsg(`Could not add "${c}" — check your internet and try again.`);
+    });
+  });
 
   function renderArchived(){
     show($('archView'), archivedCount !== 0);
@@ -604,14 +729,8 @@ async function init(){
     document.querySelectorAll('#swatches .sw').forEach(s=> s.classList.toggle('sel', s.dataset.style === style));
   }
 
-  /* the category dropdown = defaults + every category already in use, alphabetically,
-     plus a "New category…" row that reveals a text box */
-  function allCats(){
-    const set = new Set(DEFAULT_CATS);
-    products.forEach(p => set.add(catLabel(p)));
-    const extras = [...set].filter(c => !DEFAULT_CATS.includes(c)).sort((a,b)=> a.localeCompare(b));
-    return [...DEFAULT_CATS, ...extras];
-  }
+  /* the category dropdown = the owner's categories (see allCats), plus a
+     "New category…" row that reveals a text box */
   /* "kurthis " and "Kurthis" are one category — reuse the spelling already in use */
   function tidyCat(raw){
     const c = String(raw || '').replace(/\s+/g,' ').trim();
@@ -634,7 +753,7 @@ async function init(){
     const nw = document.createElement('option');
     nw.value = NEW_CAT; nw.textContent = '➕ New category…';
     sel.appendChild(nw);
-    sel.value = (selected && cats.includes(selected)) ? selected : cats[0];
+    sel.value = (selected && cats.includes(selected)) ? selected : (cats[0] || NEW_CAT);
     toggleNewCat();
   }
 
@@ -649,7 +768,7 @@ async function init(){
     $('pPrice').value = p ? (p.price || '') : '';
     $('pOldPrice').value = p ? (p.oldPrice || '') : '';
     $('pCatNew').value = '';
-    fillCatSelect(p ? catLabel(p) : DEFAULT_CATS[0]);
+    fillCatSelect(p ? catLabel(p) : '');
     photos = p ? (p.images && p.images.length ? [...p.images] : (p.image ? [p.image] : [])) : [];
     setStyle(p && p.style ? p.style : 'goldtissue');
     document.querySelector(`input[name=pStatus][value=${p ? statusOf(p) : 'available'}]`).checked = true;
@@ -792,6 +911,10 @@ async function init(){
       products = products.filter(x => x.id !== ref.id);
       products.push({ ...(target || {}), ...data, id: ref.id });
       products.sort((a,b)=> (b.createdAt || 0) - (a.createdAt || 0));
+      /* keep its category in the dropdown even if this product is saved as Hidden */
+      if(loaded && !allCats().includes(data.category)){
+        saveCats([...allCats(), data.category]).catch(err => console.warn('Vestro: could not save the category list.', err));
+      }
       renderList();
       if(!here()) return;
       formMsg('Saved ✓', 'ok');

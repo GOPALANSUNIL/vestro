@@ -39,6 +39,9 @@ brought back or deleted. Set the value to `0` to show everything again.
 
 - **WhatsApp numbers** — edit them at the bottom of `firebase-config.js`.
 - **Admin logins** — Firebase console → Authentication → Users → Add user.
+- **Categories** — admin portal → **Categories**: add or delete. Deleting one hides
+  its products from the shop (they stay in the admin as Hidden). The list is saved
+  in Firebase as `products/shop-settings`, which is not a product.
 - **Colors** — edit the `:root` section at the top of `styles.css`.
 
 Every push to `main` goes live automatically in ~1 minute.
