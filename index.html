@@ -4,7 +4,7 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Vestro by RA — Wear Your Power</title>
-<meta name="description" content="Vestro by RA — a Doha boutique of handpicked sarees, modern wear & work wear. Ordered on WhatsApp, delivered across Qatar, cash on delivery." />
+<meta name="description" content="Vestro by RA — a Doha boutique of handpicked sarees, modern wear & work wear. Ordered on WhatsApp and delivered across Qatar. Pay by cash on delivery, online or in advance." />
 <meta name="theme-color" content="#fbf7ef" />
 <link rel="icon" type="image/png" href="logo-mark.png" />
 <link rel="apple-touch-icon" href="logo-mark.png" />
@@ -13,12 +13,12 @@
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400;1,500&family=Jost:wght@300;400;500&display=swap" rel="stylesheet" />
 
   <!-- bump ?v= whenever these files change, so browsers don't keep an old copy -->
-  <link rel="stylesheet" href="styles.css?v=13">
+  <link rel="stylesheet" href="styles.css?v=14">
 
   <!-- the product list starts downloading here, before the rest of the page (catalog.js draws it) -->
   <link rel="preconnect" href="https://firestore.googleapis.com" crossorigin />
-  <script src="firebase-config.js?v=13"></script>
-  <script src="feed.js?v=13"></script>
+  <script src="firebase-config.js?v=14"></script>
+  <script src="feed.js?v=14"></script>
 </head>
 <body>
 
@@ -69,7 +69,7 @@
     </div>
     <div class="hero-meta reveal" style="transition-delay:.4s">
       <span>We deliver</span>
-      <span>Cash on delivery</span>
+      <span>Cash, online or advance payment</span>
       <span>All across Qatar</span>
     </div>
   </div>
@@ -87,7 +87,7 @@
   <div class="wrap promise-inner">
     <div class="promise-item reveal"><b>Handpicked</b><span>One piece at a time</span></div>
     <div class="promise-item reveal" style="transition-delay:.1s"><b>We deliver</b><span>All across Qatar</span></div>
-    <div class="promise-item reveal" style="transition-delay:.2s"><b>Pay at your door</b><span>Cash on delivery</span></div>
+    <div class="promise-item reveal" style="transition-delay:.2s"><b>Pay your way</b><span>Cash · Online · Advance</span></div>
     <div class="promise-item reveal" style="transition-delay:.3s"><b>Personal</b><span>Styled over WhatsApp</span></div>
   </div>
 </div>
@@ -251,7 +251,7 @@
       <h2 class="reveal" style="transition-delay:.08s">Chosen in Doha, <span class="gold-word">delivered across Qatar</span></h2>
       <p class="lead reveal" style="transition-delay:.16s">
         Every piece — from traditional wear to modern and work wear — is
-        picked with care in Doha and delivered to your door, cash on delivery.
+        picked with care in Doha and delivered to your door. Pay on delivery, online or in advance.
       </p>
       <div class="steps">
         <div class="step reveal" style="transition-delay:.2s">
@@ -264,7 +264,7 @@
         </div>
         <div class="step reveal" style="transition-delay:.36s">
           <span class="step-num">03</span>
-          <div><h4>We handle the rest</h4><p>Wrapped with care and delivered to your door. Pay only when it's in your hands.</p></div>
+          <div><h4>We handle the rest</h4><p>Wrapped with care and delivered to your door. Pay at your doorstep, online or in advance.</p></div>
         </div>
       </div>
       <div class="cta-row reveal" style="margin-top:2.6rem;transition-delay:.42s">
@@ -289,26 +289,44 @@
   <div class="wrap">
     <p class="eyebrow reveal">Why Vestro</p>
     <h2 class="reveal" style="transition-delay:.08s">A small house, <span class="gold-word">serious care</span></h2>
-    <div class="why-grid">
+    <div class="why-grid why-3">
       <div class="why reveal">
         <svg viewBox="0 0 24 24"><path d="M3 7h11v9H3zM14 10h4l3 3v3h-7z"/><circle cx="7" cy="19" r="1.8"/><circle cx="17.5" cy="19" r="1.8"/></svg>
         <h3>We deliver</h3>
         <p>Every order is delivered to your door — across Doha and all over Qatar.</p>
       </div>
       <div class="why reveal" style="transition-delay:.1s">
-        <svg viewBox="0 0 24 24"><rect x="3" y="7" width="18" height="11" rx="2"/><circle cx="12" cy="12.5" r="2.6"/><path d="M6.5 7V5.5h11V7"/></svg>
-        <h3>Cash on delivery</h3>
-        <p>Pay in cash when the parcel arrives. No advance, no online payment — see it first, then pay.</p>
-      </div>
-      <div class="why reveal" style="transition-delay:.2s">
         <svg viewBox="0 0 24 24"><path d="M12 20s-7-4.2-9-8.6C1.6 8 3.6 5 6.7 5c2 0 3.6 1.1 4.3 2.6C11.7 6.1 13.3 5 15.3 5c3.1 0 5.1 3 3.7 6.4-2 4.4-9 8.6-9 8.6z"/></svg>
         <h3>Chosen by RA</h3>
         <p>No warehouse — each piece is chosen, checked and folded by the person behind the brand.</p>
       </div>
-      <div class="why reveal" style="transition-delay:.3s">
+      <div class="why reveal" style="transition-delay:.2s">
         <svg viewBox="0 0 24 24"><path d="M12 3l2.2 4.6 5 .7-3.6 3.5.9 5-4.5-2.4-4.5 2.4.9-5L4.8 8.3l5-.7z"/></svg>
         <h3>A personal service</h3>
         <p>Real conversations on WhatsApp — ask for extra photos, videos or styling help before you decide.</p>
+      </div>
+    </div>
+
+    <!-- ways to pay -->
+    <div class="pay-block" id="payment">
+      <p class="eyebrow reveal">Payment</p>
+      <h2 class="reveal" style="transition-delay:.08s">Pay <span class="gold-word">your way</span></h2>
+      <div class="why-grid why-3">
+        <div class="why reveal">
+          <svg viewBox="0 0 24 24"><rect x="3" y="7" width="18" height="11" rx="2"/><circle cx="12" cy="12.5" r="2.6"/><path d="M6.5 7V5.5h11V7"/></svg>
+          <h3>Cash on delivery</h3>
+          <p>See it. Love it. Pay at your doorstep.</p>
+        </div>
+        <div class="why reveal" style="transition-delay:.1s">
+          <svg viewBox="0 0 24 24"><rect x="3" y="6" width="18" height="12" rx="2"/><path d="M3 10h18M7 14.5h4"/></svg>
+          <h3>Online payment</h3>
+          <p>Simple. Secure. Seamless.</p>
+        </div>
+        <div class="why reveal" style="transition-delay:.2s">
+          <svg viewBox="0 0 24 24"><rect x="4" y="5.5" width="16" height="14" rx="2"/><path d="M4 9.5h16M8.5 3.5v3.5M15.5 3.5v3.5M9 14.3l2.2 2.2 4-4.2"/></svg>
+          <h3>Advance payment</h3>
+          <p>Pay ahead. Relax. We’ll handle the rest.</p>
+        </div>
       </div>
     </div>
   </div>
@@ -367,13 +385,14 @@
     <div class="foot-col foot-brand">
       <span class="brand-name">Vestro</span>
       <p class="foot-tag">By <span class="ra-r">R</span><span class="ra-a">A</span>&ensp;·&ensp;Unlock Your Era</p>
-      <p class="foot-blurb">Handpicked sarees, modern wear and work wear — chosen with care in Doha and delivered anywhere in Qatar. Cash on delivery, always.</p>
+      <p class="foot-blurb">Handpicked sarees, modern wear and work wear — chosen with care in Doha and delivered anywhere in Qatar. Pay by cash on delivery, online or in advance.</p>
     </div>
     <div class="foot-col">
       <h4>Explore</h4>
       <a href="#collection">The collection</a>
       <a href="#instagram">The journal</a>
       <a href="#gift">How delivery works</a>
+      <a href="#payment">Ways to pay</a>
       <a href="#why">Why Vestro</a>
       <a href="#story">Our story</a>
     </div>
@@ -387,7 +406,7 @@
   </div>
   <div class="wrap foot-bottom">
     <span>© <span id="yr"></span> Vestro by RA</span>
-    <span>Delivery across Qatar · Cash on delivery</span>
+    <span>Delivery across Qatar · Cash, online or advance payment</span>
   </div>
 </footer>
 
@@ -423,7 +442,7 @@
         <a class="chip chip-wa" id="pmBuy" href="#" target="_blank" rel="noopener">Order now</a>
         <span class="chip chip-sold" id="pmSold" hidden>Sold out</span>
       </div>
-      <p class="pm-note">Delivery across Qatar · Cash on delivery</p>
+      <p class="pm-note">Delivery across Qatar · Cash, online or advance payment</p>
     </div>
   </div>
 </div>
@@ -435,8 +454,8 @@
 
   <!-- the 3D silk library loads in the background; script.js starts the silk when it arrives -->
   <script id="threeLib" async src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-  <script src="script.js?v=13"></script>
-  <script type="module" src="catalog.js?v=13"></script>
+  <script src="script.js?v=14"></script>
+  <script type="module" src="catalog.js?v=14"></script>
 
 </body>
 </html>

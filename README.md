@@ -1,6 +1,6 @@
 # Vestro by RA — Unlock Your Era
 
-Handpicked kasavu & festive saree boutique. Doha, Qatar · delivery across Qatar · cash on delivery.
+Handpicked kasavu & festive saree boutique. Doha, Qatar · delivery across Qatar · cash on delivery, online or advance payment.
 
 **Live shop:** https://vestrobyra.com.qa/
 **Admin portal:** https://vestrobyra.com.qa/admin.html

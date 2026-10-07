@@ -525,6 +525,10 @@ h2{font-size:clamp(2.6rem,5.4vw,4.4rem);margin:1.2rem 0 1.4rem}
   .why{border-right:none;margin-right:0;padding:2rem 0;border-bottom:1px solid var(--line)}
 }
 @media(max-width:560px){.why-grid{grid-template-columns:1fr}}
+/* three-across rows: the "why" cards, and the ways to pay beneath them */
+.why-grid.why-3{grid-template-columns:repeat(3,1fr)}
+@media(max-width:760px){.why-grid.why-3{grid-template-columns:1fr}}
+.pay-block{margin-top:clamp(4.5rem,9vw,7rem)}
 
 /* ============ STORY — the one full maroon block ============ */
 .story{
