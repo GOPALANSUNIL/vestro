@@ -342,11 +342,11 @@ if(!configured){
 }
 
 async function init(){
-  const { initializeApp } = await import('https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js');
+  const { initializeApp } = await import('https://www.gstatic.com/firebasejs/13.1.0/firebase-app.js');
   const { getAuth, onAuthStateChanged, signInWithEmailAndPassword, signOut } =
-    await import('https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js');
+    await import('https://www.gstatic.com/firebasejs/13.1.0/firebase-auth.js');
   const { getFirestore, collection, getDocs, getDoc, getCountFromServer, query, where, orderBy, setDoc, updateDoc, deleteDoc, doc, writeBatch } =
-    await import('https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js');
+    await import('https://www.gstatic.com/firebasejs/13.1.0/firebase-firestore.js');
 
   const app = initializeApp(cfg);
   const auth = getAuth(app);

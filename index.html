@@ -13,12 +13,12 @@
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400;1,500&family=Jost:wght@300;400;500&display=swap" rel="stylesheet" />
 
   <!-- bump ?v= whenever these files change, so browsers don't keep an old copy -->
-  <link rel="stylesheet" href="styles.css?v=14">
+  <link rel="stylesheet" href="styles.css?v=15">
 
   <!-- the product list starts downloading here, before the rest of the page (catalog.js draws it) -->
   <link rel="preconnect" href="https://firestore.googleapis.com" crossorigin />
-  <script src="firebase-config.js?v=14"></script>
-  <script src="feed.js?v=14"></script>
+  <script src="firebase-config.js?v=15"></script>
+  <script src="feed.js?v=15"></script>
 </head>
 <body>
 
@@ -453,9 +453,14 @@
 </a>
 
   <!-- the 3D silk library loads in the background; script.js starts the silk when it arrives -->
-  <script id="threeLib" async src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-  <script src="script.js?v=14"></script>
-  <script type="module" src="catalog.js?v=14"></script>
+  <!-- three.js 0.149.0: clear of the published three.js advisories (all fixed by 0.137.0),
+       and the last line before its colour/lighting changes, so the silk looks the same.
+       integrity = the file's fingerprint; the browser refuses it if the CDN copy is ever altered. -->
+  <script id="threeLib" async src="https://cdnjs.cloudflare.com/ajax/libs/three.js/0.149.0/three.min.js"
+          integrity="sha512-6p9lGA4Cm89KiwN1CixiOVQU2H9e13LeYoN6/Hj/qoUhtrMW5vNiqQz9Z96Z7/I8u89ghL6SPBz9na5HFVzF3g=="
+          crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+  <script src="script.js?v=15"></script>
+  <script type="module" src="catalog.js?v=15"></script>
 
 </body>
 </html>
